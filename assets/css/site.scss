@@ -1,0 +1,106 @@
+@import './variables';
+
+@import '~bootstrap/scss/bootstrap.scss';
+@import '~bootstrap-vue/src/index.scss';
+
+.nav-pills .nav-link{
+  color: $color-dark-blue;
+  font-weight:bold;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #36A2B9
+}
+
+
+.page-header{
+  background-color: $color-dark-blue;
+  color: #D5D8DC;
+  padding: 20px;
+  border-radius:5px;
+  margin-bottom:20px;
+}
+
+.menu-sidebar .menu-active a {
+  color: $color-yellow
+}
+
+
+html {
+  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  word-spacing: 1px;
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.indent {
+  padding-left:30px;
+}
+
+hr.grey-line {
+  border-top: 1px solid #ddd;
+}
+hr.review-separator {
+  border-top: 3px solid #777;
+}
+
+.menu-sidebar {
+  background: $color-dark-blue;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  font-weight: 600;
+}
+
+ .menu-sidebar .logo {
+  max-height: 40px;
+  margin: 40px 0 40px 20px;
+}
+
+.menu-sidebar a {
+  color: #fff;
+  text-decoration: none;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.menu-sidebar a .b-icon {
+  font-size: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.menu-sidebar .children {
+  background-color: $color-light-blue;
+}
+.menu-sidebar .children a {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 14px;
+}
+.menu-sidebar .children a:hover {
+  background: $color-accent-blue;
+}
+
+
+
+
+
+
+
+
+
