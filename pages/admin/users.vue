@@ -9,6 +9,13 @@
         </b-col>
       </b-row>
       <b-row>
+        <b-col>
+          <b-alert show variant="warning">
+            Dev TODO: Click to edit. Allow deactivate on edit. Add administrative 'change password'
+          </b-alert>
+        </b-col>
+      </b-row>
+      <b-row>
         <b-btn @click="addUser()">
           Add User
         </b-btn>

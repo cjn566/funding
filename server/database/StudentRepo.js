@@ -16,7 +16,7 @@ export default class StudentRepo extends BaseRepo {
 
   async getList () {
     const results = await this.withClient(client => client.query(
-      'select * from student.student'))
+      'select * from student.student order by student.name'))
     return results.rows
   }
 

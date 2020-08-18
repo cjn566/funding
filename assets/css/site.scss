@@ -96,11 +96,21 @@ hr.review-separator {
   background: $color-accent-blue;
 }
 
+.student-drag {
+  cursor:pointer;
+  :hover {
+    color: #36A2B9;
+  }
+}
 
+.time-period {
+  background-color: #bbb;
+  border: 1px solid #888;
+  padding: 8px;
+  border-radius: 5px;
 
+}
 
-
-
-
-
-
+.period-student {
+  margin-bottom: 10px;
+}

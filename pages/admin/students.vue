@@ -9,6 +9,13 @@
         </b-col>
       </b-row>
       <b-row>
+        <b-col>
+          <b-alert show variant="warning">
+            Dev TODO:  Get correct columns showing (no id, dateCreated, lastUpdated, isActive. update KeyId to say 'Student Id' instead). Click to edit (open modal, update as needed).
+          </b-alert>
+        </b-col>
+      </b-row>
+      <b-row>
         <b-btn @click="add()">
           Add Student
         </b-btn>

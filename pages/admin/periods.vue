@@ -9,6 +9,13 @@
         </b-col>
       </b-row>
       <b-row>
+        <b-col>
+          <b-alert show variant="warning">
+            Dev TODO: Use luxon library to properly format start/end times for period. Get correct columns showing (no id, dateCreated, lastUpdated, isActive). Click to edit (open modal, update as needed).
+          </b-alert>
+        </b-col>
+      </b-row>
+      <b-row>
         <b-btn @click="add()">
           Add Period
         </b-btn>

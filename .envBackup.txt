@@ -1,9 +1,0 @@
-
-PGHOST=ec2-3-215-83-17.compute-1.amazonaws.com
-PGPORT=5432
-PGDATABASE=d769vjj40rnt1j
-PGUSER=ygqlfjwnddbrcu
-PGPASSWORD=cb8909bae8c8b8737d598ef0864246c530d2d0c542b25f0069092f4a53df7c05
-DATABASE_URL=postgres://ygqlfjwnddbrcu:cb8909bae8c8b8737d598ef0864246c530d2d0c542b25f0069092f4a53df7c05@ec2-3-215-83-17.compute-1.amazonaws.com:5432/d769vjj40rnt1j
-
-ROOT_URL=http://localhost:3000
