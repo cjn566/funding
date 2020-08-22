@@ -53,7 +53,7 @@ class AdminTimePeriodController {
       const results = await Promise.all(periods.map(async (x) => {
         return {
           period: x,
-          students: await this.timePeriodService.getStudentsForPeriod(x.id)
+          students: await this.timePeriodService.getStudentsForPeriod(x.periodname)
         }
       }))
       res.status(200).json(results)

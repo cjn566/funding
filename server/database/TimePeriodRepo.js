@@ -1,35 +1,35 @@
 import BaseRepo from './BaseRepo'
 
 export default class TimePeriodRepo extends BaseRepo {
-  async getStudentsForPeriod (periodId) {
-    const params = [periodId]
+  async getStudentsForPeriod (periodName) {
+    const params = [periodName]
     const results = await this.withClient(client => client.query(
       `select * from student.studentTimePeriod stp
-      inner join student.student ss on stp.studentId = ss.id and stp.timePeriodId = $1 order by ss.name`, params))
+      inner join student.student ss on stp.studentId = ss.id and stp.periodName = $1 order by ss.name`, params))
     return results.rows
   }
 
   async getList () {
     const results = await this.withClient(client => client.query(
-      'select * from admin.timePeriod'))
+      'select * from lookup.timePeriod'))
     return results.rows
   }
 
-  async add (name, start, stop) {
-    const params = [name, start, stop]
+  async add (name) {
+    const params = [name]
     await this.withClient(client => client.query(
-      'insert into admin.timePeriod(periodName, startTime, endTime) values ($1, $2, $3)', params))
+      'insert into lookup.timePeriod(periodName) values ($1)', params))
   }
 
-  async addStudentToPeriod (periodId, studentKeyId) {
-    const params = [periodId, studentKeyId]
+  async addStudentToPeriod (periodName, studentKeyId) {
+    const params = [periodName, studentKeyId]
     await this.withClient(client => client.query(
-      'insert into student.studentTimePeriod (timePeriodId, isActive, studentId) values ($1, true, (select id from student.student where keyid = $2))', params))
+      'insert into student.studentTimePeriod (periodName, studentId) values ($1, (select id from student.student where keyid = $2))', params))
   }
 
-  async deleteStudentFromPeriod (periodId, studentKeyId) {
-    const params = [periodId, studentKeyId]
+  async deleteStudentFromPeriod (periodName, studentKeyId) {
+    const params = [periodName, studentKeyId]
     await this.withClient(client => client.query(
-      'delete from student.studentTimePeriod where timePeriodId = $1 and studentId = $2', params))
+      'delete from student.studentTimePeriod where periodName = $1 and studentId = $2', params))
   }
 }

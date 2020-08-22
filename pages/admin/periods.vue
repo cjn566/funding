@@ -4,15 +4,8 @@
       <b-row class="page-header">
         <b-col>
           <h1>
-            Time Periods
+            Periods
           </h1>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col>
-          <b-alert show variant="warning">
-            Dev TODO: Use luxon library to properly format start/end times for period. Get correct columns showing (no id, dateCreated, lastUpdated, isActive). Click to edit (open modal, update as needed).
-          </b-alert>
         </b-col>
       </b-row>
       <b-row>
@@ -28,12 +21,6 @@
     <b-modal ref="entity-modal" hide-footer title="Add / Edit Period">
       <b-form-group>
         <b-input v-model="$v.period.name.$model" :state="validateState($v.period.name)" placeholder="Period Name" />
-      </b-form-group>
-      <b-form-group>
-        <b-input v-model="$v.period.start.$model" :state="validateState($v.period.start)" placeholder="Start time (24H time)" />
-      </b-form-group>
-      <b-form-group>
-        <b-input v-model="$v.period.end.$model" :state="validateState($v.period.end)" placeholder="End time (24H time)" />
       </b-form-group>
       <b-row>
         <b-col>
@@ -62,12 +49,6 @@ export default {
     period: {
       name: {
         required
-      },
-      start: {
-        required
-      },
-      end: {
-        required
       }
     }
   },
@@ -75,9 +56,7 @@ export default {
     return {
       periods: [],
       period: {
-        name: null,
-        start: null,
-        end: null
+        name: null
       }
     }
   },

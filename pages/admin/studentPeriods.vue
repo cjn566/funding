@@ -12,7 +12,7 @@
       <b-col>
         <b-alert show variant="info">Drag student names into the time periods that they are allowed to access. A student can be in more than one time period. Click the delete button next to a student to remove them.</b-alert>
 
-        <b-alert show variant="warning">Dev TODO: Use luxon library to properly format start/end times for period. Add 'clear all' to each period.</b-alert>
+        <b-alert show variant="warning">Dev TODO: Add 'clear all' to each period.</b-alert>
       </b-col>
     </b-row>
     <b-row>
@@ -30,13 +30,13 @@
       </b-col>
       <b-col>
         <h2>Time Periods</h2>
-        <div v-for="period in periods" :key="period.id" class="time-period">
-          <drop @drop="handleDrop($event, period.period.id)">
+        <div v-for="period in periods" :key="period.periodname" class="time-period">
+          <drop @drop="handleDrop($event, period.period.periodname)">
             <h3>
-              {{ period.period.periodname }} <span class="small text-muted">{{ period.period.starttime }} - {{ period.period.endtime}} </span>
+              {{ period.period.periodname }}
             </h3>
-            <div v-for="student in period.students" :key="student.id" class="period-student">
-              <b-btn size="sm" @click="removeFromPeriod(period.period.id, student.studentid)">
+            <div v-for="student in period.students" :key="student.periodname" class="period-student">
+              <b-btn size="sm" @click="removeFromPeriod(period.period.periodname, student.studentid)">
                 <b-icon font-scale="1" icon="trash" />
               </b-btn>
               {{ student.name }}
@@ -77,18 +77,18 @@ export default {
         this.periods = resp.data
       })
     },
-    async handleDrop (dragData, periodId) {
+    async handleDrop (dragData, periodname) {
       const studentKey = dragData.studentKeyId
       // eslint-disable-next-line eqeqeq
-      if (this.periods.filter(x => x.period.id == periodId)[0].students.filter(x => x.keyid == studentKey).length === 0) {
-        const url = `/api/admin/timeperiod/${periodId}/${studentKey}`
+      if (this.periods.filter(x => x.period.periodname == periodname)[0].students.filter(x => x.keyid == studentKey).length === 0) {
+        const url = `/api/admin/timeperiod/${periodname}/${studentKey}`
         await this.$axios.post(url).then(() => {
           this.loadTimePeriods()
         })
       }
     },
-    async removeFromPeriod (periodId, studentId) {
-      const url = `/api/admin/timeperiod/${periodId}/${studentId}`
+    async removeFromPeriod (periodname, studentId) {
+      const url = `/api/admin/timeperiod/${periodname}/${studentId}`
       await this.$axios.delete(url).then(() => {
         this.loadTimePeriods()
       })

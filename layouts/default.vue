@@ -8,6 +8,9 @@
         <b-btn block href="/admin/periods">
           Periods
         </b-btn>
+        <b-btn block href="/admin/bellSchedule">
+          Bell Schedule
+        </b-btn>
         <b-btn block href="/admin/students">
           Students
         </b-btn>

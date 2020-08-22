@@ -5,8 +5,8 @@ export default class TimePeriodService {
     this.logger = logger
   }
 
-  async getStudentsForPeriod (periodId) {
-    return await this.timePeriodRepo.getStudentsForPeriod(periodId)
+  async getStudentsForPeriod (periodName) {
+    return await this.timePeriodRepo.getStudentsForPeriod(periodName)
   }
 
   async getList () {
@@ -15,15 +15,15 @@ export default class TimePeriodService {
   }
 
   async add (data) {
-    const { name, start, end } = data
-    await this.timePeriodRepo.add(name, start, end)
+    const { name } = data
+    await this.timePeriodRepo.add(name)
   }
 
-  async addStudentToPeriod (periodId, studentKeyId) {
-    await this.timePeriodRepo.addStudentToPeriod(periodId, studentKeyId)
+  async addStudentToPeriod (periodName, studentKeyId) {
+    await this.timePeriodRepo.addStudentToPeriod(periodName, studentKeyId)
   }
 
-  async deleteStudentFromPeriod (periodId, studentKeyId) {
-    await this.timePeriodRepo.deleteStudentFromPeriod(periodId, studentKeyId)
+  async deleteStudentFromPeriod (periodName, studentKeyId) {
+    await this.timePeriodRepo.deleteStudentFromPeriod(periodName, studentKeyId)
   }
 }
