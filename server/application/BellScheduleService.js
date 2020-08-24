@@ -15,13 +15,13 @@ export default class BellScheduleService {
     const result = await periods.map((per) => {
       return {
         name: per.periodname,
-        sunday: bellSchedule.find(x => x.dayofweek == 'Sun' && x.periodname == per.periodname),
-        monday: bellSchedule.find(x => x.dayofweek == 'Mon' && x.periodname == per.periodname),
-        tuesday: bellSchedule.find(x => x.dayofweek == 'Tue' && x.periodname == per.periodname),
-        wednesday: bellSchedule.find(x => x.dayofweek == 'Wed' && x.periodname == per.periodname),
-        thursday: bellSchedule.find(x => x.dayofweek == 'Thur' && x.periodname == per.periodname),
-        friday: bellSchedule.find(x => x.dayofweek == 'Fri' && x.periodname == per.periodname),
-        saturday: bellSchedule.find(x => x.dayofweek == 'Sat' && x.periodname == per.periodname)
+        sunday: getBellSchedule(bellSchedule, 'Sun', per.periodname),
+        monday: getBellSchedule(bellSchedule, 'Mon', per.periodname),
+        tuesday: getBellSchedule(bellSchedule, 'Tue', per.periodname),
+        wednesday: getBellSchedule(bellSchedule, 'Wed', per.periodname),
+        thursday: getBellSchedule(bellSchedule, 'Thur', per.periodname),
+        friday: getBellSchedule(bellSchedule, 'Fri', per.periodname),
+        saturday: getBellSchedule(bellSchedule, 'Sat', per.periodname)
       }
     })
     return result
@@ -30,4 +30,9 @@ export default class BellScheduleService {
   async setBellSchedule (periodName, dayOfWeek, startTime, endTime) {
     return await this.bellScheduleRepo.setBellSchedule(periodName, dayOfWeek, startTime, endTime)
   }
+}
+
+function getBellSchedule (bellSchedules, dayOfWeek, periodName) {
+  const sched = bellSchedules.filter(x => x.dayofweek == dayOfWeek && x.periodname == periodName)
+  return sched.length > 0 ? sched[0] : { starttime: null, endtime: null, dayofweek: dayOfWeek, periodname: periodName }
 }
