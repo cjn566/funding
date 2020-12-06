@@ -4,7 +4,7 @@ export default function studentRoutes (studentService, logger) {
   const router = new Router()
   const controller = new StudentController(studentService, logger)
 
-  router.get('/:key',async (req, res) => await controller.studentAccess(req, res))
+  router.get('/:key', async (req, res) => await controller.studentAccess(req, res))
 
   return router
 }
