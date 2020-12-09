@@ -11,7 +11,6 @@
     <b-row>
       <b-col>
         <b-alert show variant="info">Drag student names into the time periods that they are allowed to access. A student can be in more than one time period. Click the delete button next to a student to remove them.</b-alert>
-
         <b-alert show variant="warning">Dev TODO: Add 'clear all' to each period.</b-alert>
       </b-col>
     </b-row>

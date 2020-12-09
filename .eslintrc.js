@@ -15,6 +15,7 @@ module.exports = {
   rules: {
     'nuxt/no-cjs-in-config': 'off',
     'indent': ['error', 2],
-    'brace-style': ['warn', 'stroustrup']
+    'brace-style': ['warn', 'stroustrup'],
+    'vue/comment-directive': 0
   }
 }

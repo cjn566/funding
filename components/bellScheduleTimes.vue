@@ -9,7 +9,14 @@
 const { DateTime } = require('luxon')
 
 export default {
-  props: ['timeSlot'],
+  props: {
+    timeSlot: {
+      type: Object,
+      default () {
+        return null
+      }
+    }
+  },
   data () {
     return {
       start: null,

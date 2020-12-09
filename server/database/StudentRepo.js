@@ -5,9 +5,13 @@ export default class StudentRepo extends BaseRepo {
     if (studentKey === 1) {
       return true
     }
-    if (studentKey === 2) {
+    if (studentKey === "2") {
       return false
     }
+
+    console.log(studentKey)
+
+    return "I dont fucking know."
 
     const params = [studentKey]
 

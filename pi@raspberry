@@ -1,0 +1,26 @@
+#from sense_hat import SenseHat
+
+#sense = SenseHat()
+import time
+import http.client
+
+conn = http.client.HTTPConnection('localhost:3000')
+conn.request("GET","/api/student/12")
+r1 = conn.getresponse()
+data = r1.read()
+print(data)
+
+
+
+running  = True
+
+while running:
+    id = input("Student ID: ")
+    if id == "0":
+        print("nope")
+    elif id == "1":
+        print("yup")
+    elif id == "exit":
+        running = False
+    else:
+        print("Invalid Input")
