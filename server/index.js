@@ -7,6 +7,9 @@ require('dotenv').config()
 
 const app = express()
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({
+  extended: true
+}))
 
 // Import and Set Nuxt.js options
 const config = require('../nuxt.config.js')

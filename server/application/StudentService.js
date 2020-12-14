@@ -14,8 +14,18 @@ export default class StudentService {
     return list
   }
 
-  async add (data) {
-    const { name, key } = data
-    await this.studentRepo.add(name, key)
+  async saveStudent (id, name, key) {
+    const isDupe = await this.studentRepo.checkDuplicateKey(id, key)
+
+    if (!isDupe) {
+      if (id != null) {
+        await this.studentRepo.update(id, name, key)
+      }
+      else {
+        await this.studentRepo.add(name, key)
+      }
+    }
+
+    return !isDupe
   }
 }

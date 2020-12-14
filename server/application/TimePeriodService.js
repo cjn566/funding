@@ -14,9 +14,14 @@ export default class TimePeriodService {
     return list
   }
 
-  async add (data) {
-    const { name } = data
-    await this.timePeriodRepo.add(name)
+  async saveTimePeriod (data) {
+    const { id, name, isActive } = data
+    if (id != null) {
+      await this.timePeriodRepo.update(id, name, isActive)
+    }
+    else {
+      await this.timePeriodRepo.add(name)
+    }
   }
 
   async addStudentToPeriod (periodName, studentKeyId) {

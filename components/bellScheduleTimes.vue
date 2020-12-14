@@ -13,7 +13,9 @@ export default {
     timeSlot: {
       type: Object,
       default () {
-        return null
+        return {
+
+        }
       }
     }
   },
@@ -30,7 +32,7 @@ export default {
         return this.formatted('start')
       },
       set (val) {
-        this.format('start', val)
+        this.format('start', val.toUpperCase())
       }
     },
     formattedEnd: {
@@ -44,11 +46,11 @@ export default {
   },
   mounted () {
     if (this.timeSlot) {
-      const startTime = DateTime.fromISO(this.timeSlot.starttime)
+      const startTime = DateTime.fromISO(this.timeSlot.startTime)
       if (startTime.isValid) {
         this.start = startTime.toLocaleString(DateTime.TIME_SIMPLE)
       }
-      const endTime = DateTime.fromISO(this.timeSlot.endtime)
+      const endTime = DateTime.fromISO(this.timeSlot.endTime)
       if (endTime.isValid) {
         this.end = endTime.toLocaleString(DateTime.TIME_SIMPLE)
       }
@@ -67,7 +69,7 @@ export default {
     format (prop, val) {
       this[prop] = val
       if (this.isValidTime(val)) {
-        const res = val.match(this.timePattern)
+        const res = val.toUpperCase().match(this.timePattern)
         let hr = parseInt(res[1])
         // eslint-disable-next-line eqeqeq
         if (res[3] == 'PM') {
@@ -79,10 +81,10 @@ export default {
         localTime = localTime.set({ hour: hr, minute: min })
 
         if (prop === 'start') {
-          this.timeSlot.starttime = localTime.toLocaleString(DateTime.TIME_24_SIMPLE)
+          this.timeSlot.startTime = localTime.toLocaleString(DateTime.TIME_24_SIMPLE)
         }
         if (prop === 'end') {
-          this.timeSlot.endtime = localTime.toLocaleString(DateTime.TIME_24_SIMPLE)
+          this.timeSlot.endTime = localTime.toLocaleString(DateTime.TIME_24_SIMPLE)
         }
 
         // if both start and end times are valid, update the ball schedule
@@ -92,7 +94,7 @@ export default {
       }
     },
     isValidTime (val) {
-      const valid = val && this.timePattern.test(val.toUpperCase())
+      const valid = val && this.timePattern.test(val)
       return valid
     }
   }

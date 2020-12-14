@@ -1,4 +1,4 @@
-const passwordHash = require('password-hash')
+const crypto = require('crypto')
 
 export default class UserService {
   constructor (userRepo, logger) {
@@ -11,15 +11,56 @@ export default class UserService {
     return list
   }
 
-  async checkLogin (data) {
+  async isLoginValid (data) {
     const { email, password } = data
-    const hashed = passwordHash.generate(password)
-    return await this.userRepo.checkLogin(email, hashed)
+    const salt = await this.userRepo.getSalt(email)
+    if (salt) {
+      const hashed = genPass(salt, password)
+      return await this.userRepo.checkLogin(email, hashed)
+    }
+    return false
   }
 
-  async addUser (data) {
-    const { email, password } = data
-    const hashed = passwordHash.generate(password)
-    await this.userRepo.addUser(email, hashed)
+  async addUser (email, first, last, password) {
+    const salt = crypto.randomBytes(16).toString('hex')
+    const hashed = genPass(salt, password)
+    const isDupe = await this.userRepo.checkForDuplicateUserEmail(email)
+    if (isDupe) {
+      return false
+    }
+    else {
+      await this.userRepo.addUser(first, last, email, salt, hashed)
+      return true
+    }
   }
+
+  async updateUser (id, email, first, last) {
+    const isDupe = await this.userRepo.checkForDuplicateUserEmailOnUpdate(id, email)
+    if (isDupe) {
+      return false
+    }
+    else {
+      await this.userRepo.updateUser(id, email, first, last)
+      return true
+    }
+  }
+
+  async updateLogin (email) {
+    await this.userRepo.updateLogin(email)
+  }
+
+  async changeUserState (id, isActive) {
+    await this.userRepo.changeUserState(id, isActive)
+  }
+
+  async changeUserPassword (id, password) {
+    const salt = crypto.randomBytes(16).toString('hex')
+    const hashed = genPass(salt, password)
+    await this.userRepo.updatePassword(id, salt, hashed)
+  }
+}
+
+function genPass (salt, password) {
+  return crypto.pbkdf2Sync(password, salt,
+    1000, 64, 'sha512').toString('hex')
 }

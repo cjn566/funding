@@ -51,6 +51,7 @@
 import { Drag, Drop } from 'vue-drag-drop'
 
 export default {
+  layout: 'admin',
   components: {
     Drag,
     Drop
