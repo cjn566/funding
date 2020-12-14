@@ -54,6 +54,7 @@ import formatMixin from '@/utils/formatMixin'
 import validateMixin from '@/utils/validateMixin'
 
 export default {
+  layout: 'admin',
   mixins: [formatMixin, validateMixin],
   validations: {
     student: {

@@ -5,23 +5,23 @@ create schema lookup;
 create table student.student(
 	id serial primary key,
 	name text not null,
-	keyId text not null,
+	keyId text not null unique,
 	dateCreated timestamp with time zone not null default (now() at time zone 'utc'),
 	lastUpdated timestamp with time zone not null default (now() at time zone 'utc')
 );
 
 create table admin.user(
 	id serial primary key,
-	email text not null,
+	email text not null unique,
+  first_name text not null,
+  last_name text not null;
 	password text not null,
+  salt text not null,
+  is_active boolean not null default true,
 	dateCreated timestamp with time zone not null default (now() at time zone 'utc'),
-	lastUpdated timestamp with time zone not null default (now() at time zone 'utc')
+	lastUpdated timestamp with time zone not null default (now() at time zone 'utc'),
+  last_login timestamp with time zone
 );
-create table admin.userLogin(
-	userId int references admin.user not null,
-	dateLoggedIn timestamp with time zone not null default (now() at time zone 'utc')
-);
-
 create table lookup.timePeriod (
   periodName text primary key,
 	dateCreated timestamp with time zone not null default (now() at time zone 'utc'),

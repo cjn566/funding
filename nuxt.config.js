@@ -44,7 +44,9 @@ module.exports = {
     // Doc: https://bootstrap-vue.js.org
     'bootstrap-vue/nuxt',
     // Doc: https://axios.nuxtjs.org
-    '@nuxtjs/axios'
+    '@nuxtjs/axios',
+    // Doc: https://auth.nuxtjs.org
+    '@nuxtjs/auth-next'
   ],
   /*
   ** Axios module configuration
@@ -55,6 +57,24 @@ module.exports = {
   ** Auth module configuration
   ** See https://auth.nuxtjs.org
   */
+  auth: {
+    strategies: {
+      local: {
+        token: {
+          property: 'token'
+        },
+        user: {
+          autoFetch: false
+        },
+        endpoints: {
+          login: { url: '/api/auth/login', method: 'post' },
+          logout: false,
+          user: false
+        }
+      }
+    }
+  },
+
   bootstrapVue: {
     bootstrapCSS: false,
     bootstrapVueCSS: false,
@@ -72,5 +92,8 @@ module.exports = {
     */
     extend (config, ctx) {
     }
+  },
+  router: {
+    middleware: ['auth']
   }
 }
