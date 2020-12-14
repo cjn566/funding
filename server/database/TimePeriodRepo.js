@@ -11,7 +11,7 @@ export default class TimePeriodRepo extends BaseRepo {
 
   async getList () {
     const results = await this.withClient(client => client.query(
-      'select * from lookup.timePeriod'))
+      'select * from lookup.timePeriod where is_active = true'))
     return results.rows
   }
 
@@ -19,6 +19,12 @@ export default class TimePeriodRepo extends BaseRepo {
     const params = [name]
     await this.withClient(client => client.query(
       'insert into lookup.timePeriod(periodName) values ($1)', params))
+  }
+
+  async update (id, name, isActive) {
+    const params = [id, name, isActive]
+    await this.withClient(client => client.query(
+      'update lookup.timePeriod set periodname = $2, is_active = $3 where id = $1', params))
   }
 
   async addStudentToPeriod (periodName, studentKeyId) {

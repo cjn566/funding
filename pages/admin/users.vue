@@ -8,12 +8,12 @@
           </h1>
         </b-col>
       </b-row>
-      <b-row>
-        <b-btn @click="addUser()">
-          Add User
-        </b-btn>
-      </b-row>
       <div v-if="!isAdding && !isEditing">
+        <b-row>
+          <b-btn @click="addUser()">
+            Add User
+          </b-btn>
+        </b-row>
         <b-row>
           <b-table
             :items="users"
@@ -108,7 +108,7 @@
             </b-form-group>
           </b-col>
         </b-row>
-        <b-row v-if="!$v.user.$anyDirty">
+        <b-row v-if="!$v.user.$anyDirty && isEditing">
           <b-col md="2" offset-md="4">
             <b-button v-if="user.isActive" block class="mt-3" variant="danger" @click="disable()">
               Disable User
@@ -144,10 +144,11 @@
 import { required, email, requiredIf, sameAs } from 'vuelidate/lib/validators'
 import formatMixin from '@/utils/formatMixin'
 import validateMixin from '@/utils/validateMixin'
+import messageMixin from '@/utils/messageMixin'
 
 export default {
   layout: 'admin',
-  mixins: [formatMixin, validateMixin],
+  mixins: [formatMixin, validateMixin, messageMixin],
   validations: {
     user: {
       first: {
@@ -242,14 +243,7 @@ export default {
         const url = `/api/admin/users/${this.user.id}/password`
         await this.$axios.patch(url, { password: this.passwordChange.one })
           .then((response) => {
-            this.$bvToast.toast('Password updated.', {
-              title: 'Success',
-              autoHideDelay: 5000,
-              variant: 'success',
-              solid: true,
-              appendToast: false,
-              toaster: 'b-toaster-bottom-right'
-            })
+            this.showSuccess('Success', 'Password updated.')
             this.cancelPwChange()
             this.cancelUser()
             this.resetUser()
@@ -261,6 +255,7 @@ export default {
       this.isChangingPassword = true
     },
     editUser (record, idx) {
+      this.$v.$reset()
       this.user.id = record.id
       this.user.first = record.first_name
       this.user.last = record.last_name
@@ -296,14 +291,10 @@ export default {
             this.resetUser()
             this.loadList()
             if (response.data === false) {
-              this.$bvToast.toast('Duplicate email address, cannot create.', {
-                title: 'Error',
-                autoHideDelay: 5000,
-                variant: 'danger',
-                solid: true,
-                appendToast: false,
-                toaster: 'b-toaster-bottom-right'
-              })
+              this.showError('Error', 'Duplicate email address, cannot create.')
+            }
+            else {
+              this.showSuccess('Success', 'User created.')
             }
           })
       }
@@ -331,14 +322,7 @@ export default {
         const url = `/api/admin/users/${this.user.id}/disable`
         await this.$axios.patch(url, this.user)
           .then((response) => {
-            this.$bvToast.toast(`${this.user.email}'s account is disabled.`, {
-              title: 'User Disabled',
-              autoHideDelay: 5000,
-              variant: 'success',
-              solid: true,
-              appendToast: false,
-              toaster: 'b-toaster-bottom-right'
-            })
+            this.showSuccess('Success', `${this.user.email}'s account is disabled.`)
             this.cancelUser()
             this.resetUser()
             this.loadList()
@@ -349,14 +333,7 @@ export default {
       const url = `/api/admin/users/${this.user.id}/enable`
       await this.$axios.patch(url, this.user)
         .then((response) => {
-          this.$bvToast.toast(`${this.user.email}'s account is enabled.`, {
-            title: 'User Enabled',
-            autoHideDelay: 5000,
-            variant: 'success',
-            solid: true,
-            appendToast: false,
-            toaster: 'b-toaster-bottom-right'
-          })
+          this.showSuccess('User Enabled', `${this.user.email}'s account is enabled.`)
           this.cancelUser()
           this.resetUser()
           this.loadList()

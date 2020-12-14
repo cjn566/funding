@@ -83,7 +83,7 @@ class AdminTimePeriodController {
 
   async add (req, res) {
     try {
-      const results = await this.timePeriodService.add(req.body)
+      const results = await this.timePeriodService.saveTimePeriod(req.body)
       res.status(200).json(results)
     }
     catch (ex) {

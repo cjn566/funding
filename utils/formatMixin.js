@@ -3,7 +3,8 @@ const { DateTime } = require('luxon')
 
 export default {
   methods: {
-    formatDate (date) {
+    formatDate (date, delimeter) {
+      // TODO: something funky is happening here, we are not getting the actual pacific timezone date properly
       // date is UTC, convert to local
       const dt = DateTime.fromISO(date)
       const dteStr = dt.toLocaleString(DateTime.DATETIME_SHORT)

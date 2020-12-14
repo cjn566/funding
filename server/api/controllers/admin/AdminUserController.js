@@ -34,7 +34,6 @@ class AdminUserController {
     }
   }
 
-
   async changeUserState (req, res, isActive) {
     try {
       await this.userService.changeUserState(req.params.id, isActive)
