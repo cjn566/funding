@@ -16,7 +16,7 @@ export default class TimePeriodService {
 
   async saveTimePeriod (data) {
     const { id, name, isActive } = data
-    if (id !== null) {
+    if (id != null) {
       await this.timePeriodRepo.update(id, name, isActive)
     }
     else {

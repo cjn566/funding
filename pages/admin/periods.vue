@@ -23,12 +23,12 @@
             show-empty
             @row-clicked="editPeriod"
           >
-            <template v-slot:head(is_active)="data">
+            <template v-slot:head(isActive)="data">
               <div class="text-center">
                 {{ data.label }}
               </div>
             </template>
-            <template v-slot:cell(is_active)="data">
+            <template v-slot:cell(isActive)="data">
               <div class="text-center">
                 {{ boolAsCheck(data.value) }}
               </div>
@@ -44,13 +44,14 @@
             </b-form-group>
           </b-col>
         </b-row>
-        <b-row v-if="!$v.period.$anyDirty">
+        <!-- commenting out, not sure if we want to support disabling periods -->
+        <!-- <b-row v-if="!$v.period.$anyDirty && !isNew">
           <b-col md="4" offset-md="4">
             <b-button block class="mt-3" variant="danger" @click="deactivate">
               Deactivate
             </b-button>
           </b-col>
-        </b-row>
+        </b-row> -->
         <b-row v-if="$v.period.$anyDirty">
           <b-col md="2" offset-md="4">
             <b-button block class="mt-3" variant="danger" @click="cancel">
@@ -95,12 +96,12 @@ export default {
       },
       fields: [
         {
-          key: 'periodname',
+          key: 'periodName',
           label: 'Name',
           sortable: false
         },
         {
-          key: 'is_active',
+          key: 'isActive',
           label: 'Active',
           sortable: false
         }
@@ -109,7 +110,7 @@ export default {
   },
   computed: {
     isNew () {
-      return this.period.is === null
+      return this.period.id == null
     }
   },
   mounted () {
@@ -117,10 +118,11 @@ export default {
   },
   methods: {
     editPeriod (val) {
+      this.$v.period.$reset()
       this.isEditMode = true
       this.period.id = val.id
-      this.period.name = val.periodname
-      this.period.isActive = val.is_active
+      this.period.name = val.periodName
+      this.period.isActive = val.isActive
     },
     add () {
       this.$v.period.$reset()

@@ -15,7 +15,7 @@ export default class BellScheduleService {
     const result = await periods.map((per) => {
       return {
         id: per.id,
-        name: per.periodname,
+        name: per.period_name,
         sunday: getBellSchedule(bellSchedule, 'Sun', per.id),
         monday: getBellSchedule(bellSchedule, 'Mon', per.id),
         tuesday: getBellSchedule(bellSchedule, 'Tue', per.id),

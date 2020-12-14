@@ -6,19 +6,27 @@ export default function adminStudentRoutes (studentService, logger) {
 
   // admin functionality
   router.get('/', async (req, res) => await controller.getList(req, res))
-  router.post('/', async (req, res) => await controller.add(req, res))
+  router.post('/', async (req, res) => await controller.saveStudent(req, res))
   return router
 }
 
 class AdminStudentController {
-  constructor (timePeriodService, logger) {
-    this.timePeriodService = timePeriodService
+  constructor (studentService, logger) {
+    this.studentService = studentService
     this.logger = logger
   }
 
   async getList (req, res) {
     try {
-      const results = await this.timePeriodService.getList()
+      const data = await this.studentService.getList()
+      const results = data.map((x) => {
+        return {
+          id: x.id,
+          name: x.name,
+          key: x.key_id,
+          isActive: x
+        }
+      })
       res.status(200).json(results)
     }
     catch (ex) {
@@ -30,10 +38,11 @@ class AdminStudentController {
     }
   }
 
-  async add (req, res) {
+  async saveStudent (req, res) {
     try {
-      const results = await this.timePeriodService.add(req.body)
-      res.status(200).json(results)
+      const { id, name, key } = req.body
+      const success = await this.studentService.saveStudent(id, name, key)
+      res.status(200).json(success)
     }
     catch (ex) {
       if (!ex.logged) {
