@@ -35,7 +35,14 @@ export default class UserService {
   }
 
   async updateUser (id, email, first, last) {
-    await this.userRepo.updateUser(id, email, first, last)
+    const isDupe = await this.userRepo.checkForDuplicateUserEmailOnUpdate(id, email)
+    if (isDupe) {
+      return false
+    }
+    else {
+      await this.userRepo.updateUser(id, email, first, last)
+      return true
+    }
   }
 
   async updateLogin (email) {

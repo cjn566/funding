@@ -32,7 +32,7 @@ class AdminBellScheduleRoutes {
 
   async updateBellSchedule (req, res) {
     try {
-      const results = await this.bellScheduleService.setBellSchedule(req.body.periodname, req.body.dayofweek, req.body.starttime, req.body.endtime)
+      const results = await this.bellScheduleService.setBellSchedule(req.body.periodId, req.body.dayOfWeek, req.body.startTime, req.body.endTime)
       res.status(200).json(results)
     }
     catch (ex) {

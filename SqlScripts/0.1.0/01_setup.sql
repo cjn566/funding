@@ -5,9 +5,10 @@ create schema lookup;
 create table student.student(
 	id serial primary key,
 	name text not null,
-	keyId text not null unique,
-	dateCreated timestamp with time zone not null default (now() at time zone 'utc'),
-	lastUpdated timestamp with time zone not null default (now() at time zone 'utc')
+	key_id text not null unique,
+  is_active boolean not null default true,
+	date_created timestamp with time zone not null default (now() at time zone 'utc'),
+	last_updated timestamp with time zone not null default (now() at time zone 'utc')
 );
 
 create table admin.user(
@@ -47,25 +48,26 @@ insert into lookup.dayOfWeek values
 
 create table admin.bellSchedule(
 	id serial primary key,
-  periodId int not null references lookup.timePeriod,
-  dayOfWeek text not null references lookup.dayOfWeek,
-	startTime time with time zone not null,
-	endTime time with time zone not null,
-	dateCreated timestamp with time zone not null default (now() at time zone 'utc'),
-	lastUpdated timestamp with time zone not null default (now() at time zone 'utc')
+  period_id int not null references lookup.timePeriod,
+  day_of_week text not null references lookup.dayOfWeek,
+	start_time time without time zone not null,
+	end_time time without time zone not null,
+	date_created timestamp with time zone not null default (now() at time zone 'utc'),
+	last_updated timestamp with time zone not null default (now() at time zone 'utc')
 );
 
 create table student.studentTimePeriod (
-	studentId int references student.student not null,
-	periodId int references lookup.timePeriod not null,
-	dateAdded timestamp with time zone not null default (now() at time zone 'utc'),
-	lastUpdated timestamp with time zone not null default (now() at time zone 'utc')
+	student_id int references student.student not null,
+	period_id int references lookup.timePeriod not null,
+	date_created timestamp with time zone not null default (now() at time zone 'utc'),
+	last_updated timestamp with time zone not null default (now() at time zone 'utc')
 );
 
 create table student.studentAccess(
-	studentId int references student.student not null,
-	peroidId int references lookup.timePeriod not null,
-  dayOfWeek text references lookup.dayOfWeek not null,
+	student_id int references student.student not null,
+	period_id int references lookup.timePeriod not null,
+  day_of_week text references lookup.dayOfWeek not null,
 	success boolean not null,
-	dateAdded timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default (now() at time zone 'utc'),
+	last_updated timestamp with time zone not null default (now() at time zone 'utc')
 );

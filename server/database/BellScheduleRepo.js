@@ -8,22 +8,22 @@ export default class BellScheduleRepo extends BaseRepo {
     return results.rows
   }
 
-  async setBellSchedule (periodName, dayOfWeek, startTime, endTime) {
-    const params1 = [periodName, dayOfWeek]
+  async setBellSchedule (periodId, dayOfWeek, startTime, endTime) {
+    const params1 = [periodId, dayOfWeek]
     const getId = await this.withClient(client => client.query(
-      'select id from admin.bellSchedule where periodName = $1 and dayOfWeek = $2', params1)
+      'select id from admin.bellSchedule where period_id = $1 and day_of_week = $2', params1)
     )
 
     if (getId.rows.length > 0) {
       const id = getId.rows[0].id
       const params2 = [startTime, endTime, id]
       await this.withClient(client => client.query(
-        'update admin.bellSchedule set startTime = $1, endTime = $2 where  id = $3', params2))
+        'update admin.bellSchedule set start_time = $1, end_time = $2 where  id = $3', params2))
     }
     else {
-      const params3 = [periodName, dayOfWeek, startTime, endTime]
+      const params3 = [periodId, dayOfWeek, startTime, endTime]
       await this.withClient(client => client.query(
-        'insert into admin.bellSchedule(periodName, dayOfWeek, startTime, endTime) values($1,$2,$3,$4)', params3))
+        'insert into admin.bellSchedule(period_id, day_of_week, start_time, end_time) values($1,$2,$3,$4)', params3))
     }
   }
 }

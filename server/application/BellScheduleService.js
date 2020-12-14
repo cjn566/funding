@@ -14,25 +14,32 @@ export default class BellScheduleService {
     // build return objects
     const result = await periods.map((per) => {
       return {
+        id: per.id,
         name: per.periodname,
-        sunday: getBellSchedule(bellSchedule, 'Sun', per.periodname),
-        monday: getBellSchedule(bellSchedule, 'Mon', per.periodname),
-        tuesday: getBellSchedule(bellSchedule, 'Tue', per.periodname),
-        wednesday: getBellSchedule(bellSchedule, 'Wed', per.periodname),
-        thursday: getBellSchedule(bellSchedule, 'Thur', per.periodname),
-        friday: getBellSchedule(bellSchedule, 'Fri', per.periodname),
-        saturday: getBellSchedule(bellSchedule, 'Sat', per.periodname)
+        sunday: getBellSchedule(bellSchedule, 'Sun', per.id),
+        monday: getBellSchedule(bellSchedule, 'Mon', per.id),
+        tuesday: getBellSchedule(bellSchedule, 'Tue', per.id),
+        wednesday: getBellSchedule(bellSchedule, 'Wed', per.id),
+        thursday: getBellSchedule(bellSchedule, 'Thur', per.id),
+        friday: getBellSchedule(bellSchedule, 'Fri', per.id),
+        saturday: getBellSchedule(bellSchedule, 'Sat', per.id)
       }
     })
     return result
   }
 
-  async setBellSchedule (periodName, dayOfWeek, startTime, endTime) {
-    return await this.bellScheduleRepo.setBellSchedule(periodName, dayOfWeek, startTime, endTime)
+  async setBellSchedule (periodId, dayOfWeek, startTime, endTime) {
+    return await this.bellScheduleRepo.setBellSchedule(periodId, dayOfWeek, startTime, endTime)
   }
 }
 
-function getBellSchedule (bellSchedules, dayOfWeek, periodName) {
-  const sched = bellSchedules.filter(x => x.dayofweek == dayOfWeek && x.periodname == periodName)
-  return sched.length > 0 ? sched[0] : { starttime: null, endtime: null, dayofweek: dayOfWeek, periodname: periodName }
+function getBellSchedule (bellSchedules, dayOfWeek, id) {
+  const sched = bellSchedules.filter(x => x.day_of_week == dayOfWeek && x.period_id == id)
+
+  return {
+    periodId: id,
+    dayOfWeek,
+    startTime: sched.length > 0 ? sched[0].start_time : null,
+    endTime: sched.length > 0 ? sched[0].end_time : null
+  }
 }

@@ -9,7 +9,10 @@
         </b-col>
       </b-row>
       <b-row>
-        <b-table :items="bellSchedules">
+        <b-table
+          :items="bellSchedules"
+          :fields="fields"
+        >
           <template v-slot:cell(sunday)="data">
             <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
           </template>
@@ -41,13 +44,14 @@
 import { required } from 'vuelidate/lib/validators'
 import formatMixin from '@/utils/formatMixin'
 import validateMixin from '@/utils/validateMixin'
+import messageMixin from '@/utils/messageMixin'
 import BellScheduleTimes from '@/components/bellScheduleTimes'
 
 export default {
   components: {
     BellScheduleTimes
   },
-  mixins: [formatMixin, validateMixin],
+  mixins: [formatMixin, validateMixin, messageMixin],
   layout: 'admin',
   validations: {
     period: {
@@ -64,7 +68,49 @@ export default {
   },
   data () {
     return {
-      bellSchedules: []
+      bellSchedules: [],
+      fields: [
+        {
+          key: 'name',
+          label: 'Name',
+          sortable: false
+        },
+        {
+          key: 'sunday',
+          label: 'Sunday',
+          sortable: false
+        },
+        {
+          key: 'monday',
+          label: 'Monday',
+          sortable: false
+        },
+        {
+          key: 'tuesday',
+          label: 'Tuesday',
+          sortable: false
+        },
+        {
+          key: 'wednesday',
+          label: 'Wednesday',
+          sortable: false
+        },
+        {
+          key: 'thursday',
+          label: 'Thursday',
+          sortable: false
+        },
+        {
+          key: 'friday',
+          label: 'Friday',
+          sortable: false
+        },
+        {
+          key: 'saturday',
+          label: 'Saturday',
+          sortable: false
+        }
+      ]
     }
   },
   mounted () {
@@ -83,15 +129,7 @@ export default {
     timeChanged (timeSlot) {
       const url = '/api/admin/bellSchedule/'
       this.$axios.post(url, timeSlot).then((resp) => {
-        const msg = `${timeSlot.dayofweek} ${timeSlot.periodname}`
-        this.$bvToast.toast(msg, {
-          title: 'Bell Schedule Saved',
-          autoHideDelay: 5000,
-          variant: 'success',
-          solid: true,
-          appendToast: false,
-          toaster: 'b-toaster-bottom-right'
-        })
+        this.showSuccess('Saved', 'Bell schedule saved')
       })
     }
   }

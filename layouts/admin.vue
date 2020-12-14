@@ -17,6 +17,9 @@
         <b-btn block to="/admin/studentPeriods">
           Student Periods
         </b-btn>
+        <b-btn block to="/admin/reports">
+          Reports
+        </b-btn>
         <b-btn block @click="logOut()">
           Log Out
         </b-btn>

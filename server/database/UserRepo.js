@@ -14,6 +14,13 @@ export default class UserRepo extends BaseRepo {
     return ret.rows[0].cnt
   }
 
+  async checkForDuplicateUserEmailOnUpdate (id, email) {
+    const params = [email, id]
+    const ret = await this.withClient(client => client.query(
+      'select count(*) > 0 as cnt from admin.user where email = $1 and id != $2', params))
+    return ret.rows[0].cnt
+  }
+
   async addUser (first, last, email, salt, passwordHashed) {
     const params = [first, last, email, salt, passwordHashed]
     await this.withClient(client => client.query(
