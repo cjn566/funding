@@ -1,7 +1,7 @@
 <template>
   <b-container fluid>
     <b-row>
-      <b-col v-if="isLoggedIn" md="4" lg="3" xl="2" class="menu-sidebar">
+      <b-col v-if="isLoggedIn" md="2" class="menu-sidebar">
         <b-btn block to="/admin/users" style="margin-top: 120px;">
           Users
         </b-btn>
@@ -24,8 +24,8 @@
           Log Out
         </b-btn>
       </b-col>
-      <b-col md="4" lg="3" xl="2" />
-      <b-col md="8" lg="9" xl="10">
+      <b-col md="2" />
+      <b-col md="10">
         <main>
           <nuxt />
         </main>

@@ -4,8 +4,9 @@ create schema lookup;
 
 create table student.student(
 	id serial primary key,
-	name text not null,
-	key_id text not null unique,
+	first_name text not null,
+  last_name text not null,
+	key_id text not null,
   is_active boolean not null default true,
 	date_created timestamp with time zone not null default (now() at time zone 'utc'),
 	last_updated timestamp with time zone not null default (now() at time zone 'utc')

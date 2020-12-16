@@ -1,3 +1,6 @@
+
+const groupBy = require('lodash.groupby')
+
 export default class StudentService {
   constructor (studentRepo, logger) {
     this.studentRepo = studentRepo
@@ -14,15 +17,52 @@ export default class StudentService {
     return list
   }
 
-  async saveStudent (id, name, key) {
+  async deleteStudent (id) {
+    await this.studentRepo.deleteStudent(id)
+  }
+
+  async batchCreateStudents (students) {
+    // check for duplicate keys within the file, return error if so
+    const keys = groupBy(students, 'key')
+    let messages = []
+    for (const prop in keys) {
+      const val = keys[prop]
+      if (val.length > 1) {
+        messages.push(`Key ${prop} is duplicated in this file.`)
+      }
+    }
+
+    if (messages.length === 0) {
+    // check for duplicate keys against active students in the database
+      const dupeCheckerPromises = students.map(async (stu) => {
+        stu.duplicate = await this.studentRepo.checkDuplicateKey(null, stu.key)
+      })
+      await Promise.all(dupeCheckerPromises).then(() => {
+        messages = students.filter(x => x.duplicate === true).map(x =>
+          `Key ${x.key} is already associated with a student.`
+        )
+      })
+    }
+
+    // if no errors, save the student record
+    if (messages.length === 0) {
+      for (const student of students) {
+        await this.saveStudent(null, student.first, student.last, student.key)
+      }
+    }
+
+    return messages
+  }
+
+  async saveStudent (id, firstName, lastName, key) {
     const isDupe = await this.studentRepo.checkDuplicateKey(id, key)
 
     if (!isDupe) {
       if (id != null) {
-        await this.studentRepo.update(id, name, key)
+        await this.studentRepo.update(id, firstName, lastName, key)
       }
       else {
-        await this.studentRepo.add(name, key)
+        await this.studentRepo.add(firstName, lastName, key)
       }
     }
 

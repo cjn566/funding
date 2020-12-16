@@ -8,28 +8,56 @@
           </h1>
         </b-col>
       </b-row>
-      <div v-if="!isEditing">
+      <div v-if="isListing">
         <b-row>
-          <b-btn @click="add()">
-            Add Student
-          </b-btn>
+          <b-col>
+            <b-btn @click="add()">
+              Add Student
+            </b-btn>
+            <b-btn @click="upload()">
+              Upload Student File
+            </b-btn>
+          </b-col>
+          <b-col>
+            <b-form-input v-model="filter" type="search" placeholder="Type to search" />
+          </b-col>
         </b-row>
-        <b-row>
+        <b-row style="margin-top:10px">
           <b-table
             :items="students"
             :fields="fields"
-            hover
+            :filter="filter"
             small
             show-empty
-            @row-clicked="editStudent"
-          />
+            sort-icon-left
+            :sort-by.sync="sortBy"
+            :sort-desc.sync="sortDesc"
+          >
+            <template v-slot:cell(actions)="data">
+              <div style="width:200px">
+                <b-btn size="sm" variant="info" @click="editStudent(data.item)">
+                  <b-icon font-scale="1" icon="pencil" />
+                </b-btn>
+                <b-btn size="sm" variant="danger" @click="deleteStudent(data.item)">
+                  <b-icon font-scale="1" icon="trash" />
+                </b-btn>
+              </div>
+            </template>
+          </b-table>
         </b-row>
       </div>
       <div v-if="isEditing">
         <b-row>
           <b-col md="4" offset-md="4">
             <b-form-group>
-              <b-input v-model="$v.student.name.$model" :state="validateState($v.student.name)" placeholder="Student Name" />
+              <b-input v-model="$v.student.firstName.$model" :state="validateState($v.student.firstName)" placeholder="First Name" />
+            </b-form-group>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col md="4" offset-md="4">
+            <b-form-group>
+              <b-input v-model="$v.student.lastName.$model" :state="validateState($v.student.lastName)" placeholder="Last Name" />
             </b-form-group>
           </b-col>
         </b-row>
@@ -41,7 +69,7 @@
             </b-form-group>
           </b-col>
         </b-row>
-        <b-row v-if="$v.student.$anyDirty">
+        <b-row>
           <b-col md="2" offset-md="4">
             <b-button block class="mt-3" variant="danger" @click="cancel">
               Cancel
@@ -50,6 +78,66 @@
           <b-col md="2">
             <b-button block class="mt-3" variant="success" @click="save">
               Save
+            </b-button>
+          </b-col>
+        </b-row>
+      </div>
+
+      <div v-if="isDeleting">
+        <b-row>
+          <b-col md="4" offset-md="4">
+            Are you sure you want to delete {{ student.firstName }} {{ student.lastName }} ({{ student.key }})?
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col md="2" offset-md="4">
+            <b-button block class="mt-3" variant="danger" @click="cancel">
+              No
+            </b-button>
+          </b-col>
+          <b-col md="2">
+            <b-button block class="mt-3" variant="success" @click="confirmDelete">
+              Yes
+            </b-button>
+          </b-col>
+        </b-row>
+      </div>
+
+      <div v-if="isUploading">
+        <b-row>
+          <b-col md="8" offset-md="2">
+            Select the file you want to upload. It must be a csv with each row in the format:
+            <code>
+              student_id,first_name,last_name<br>
+              &lt;student_id&gt;,&lt;first_name&gt;,&lt;last_name&gt; <br>
+              &lt;student_id&gt;,&lt;first_name&gt;,&lt;last_name&gt; <br>
+              ...
+            </code>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col md="8" offset-md="2">
+            <b-form-group>
+              <b-form-file
+                v-model="files"
+                accept=".csv"
+                multiple
+                :state="fileInputError"
+                placeholder="Drop your match file here."
+                drop-placeholder="Drop file here..."
+              />
+            </b-form-group>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col md="2" offset-md="4">
+            <b-button block class="mt-3" variant="danger" @click="cancel">
+              Cancel
+            </b-button>
+          </b-col>
+          <b-col md="2">
+            <b-button block class="mt-3" variant="success" @click="doUpload">
+              Upload
             </b-button>
           </b-col>
         </b-row>
@@ -69,7 +157,10 @@ export default {
   mixins: [formatMixin, validateMixin, messageMixin],
   validations: {
     student: {
-      name: {
+      firstName: {
+        required
+      },
+      lastName: {
         required
       },
       key: {
@@ -79,17 +170,34 @@ export default {
   },
   data () {
     return {
-      isEditing: false,
+      files: [],
+      processing: false,
+      mode: 'list',
       students: [],
+      sortBy: 'lastName',
+      sortDesc: false,
+      filter: null,
       student: {
         id: null,
-        name: null,
+        firstName: null,
+        lastName: null,
         key: null
       },
       fields: [
         {
-          key: 'name',
-          label: 'Name',
+          key: 'actions',
+          label: '',
+          sortable: false,
+          tdClass: 'action-column'
+        },
+        {
+          key: 'lastName',
+          label: 'Last',
+          sortable: true
+        },
+        {
+          key: 'firstName',
+          label: 'First',
           sortable: true
         },
         {
@@ -101,6 +209,18 @@ export default {
     }
   },
   computed: {
+    isEditing () {
+      return this.mode === 'edit'
+    },
+    isDeleting () {
+      return this.mode === 'delete'
+    },
+    isUploading () {
+      return this.mode === 'upload'
+    },
+    isListing () {
+      return this.mode === 'list'
+    },
     isNew () {
       return this.student.id == null
     }
@@ -109,26 +229,46 @@ export default {
     this.loadList()
   },
   methods: {
+    upload () {
+      this.mode = 'upload'
+    },
+    deleteStudent (val) {
+      this.student = val
+      this.mode = 'delete'
+    },
     resetStudent () {
-      this.student.id = null
-      this.student.name = null
-      this.student.key = null
+      this.student = {
+        id: null,
+        firstName: null,
+        lastName: null,
+        key: null
+      }
     },
     add () {
       this.$v.student.$reset()
-      this.isEditing = true
+      this.mode = 'edit'
       this.resetStudent()
     },
     cancel () {
       this.resetStudent()
-      this.isEditing = false
+      this.mode = 'list'
     },
     editStudent (val) {
       this.$v.student.$reset()
       this.student.id = val.id
-      this.student.name = val.name
+      this.student.firstName = val.firstName
+      this.student.lastName = val.lastName
       this.student.key = val.key
-      this.isEditing = true
+      this.mode = 'edit'
+    },
+    async confirmDelete () {
+      const url = `/api/admin/student/${this.student.id}/delete`
+      await this.$axios.patch(url)
+        .then((response) => {
+          this.showSuccess('Deleted', 'Student record deleted.')
+          this.cancel()
+          this.loadList()
+        })
     },
     async save () {
       this.$v.student.$touch()
@@ -154,6 +294,41 @@ export default {
         .then((response) => {
           this.students = response.data
         })
+    },
+    async doUpload (env) {
+      env.preventDefault()
+      this.results = null
+
+      if (this.files.length === 1) {
+        this.processing = true
+        const url = '/api/admin/student/batch'
+
+        const formData = new FormData()
+        formData.append('file', this.files[0])
+
+        await this.$axios.post(url, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+          .then((response) => {
+            this.files = null
+            if (response.data.success === true) {
+              this.showSuccess('Saved', 'Students added.')
+              this.loadList()
+              this.mode = 'list'
+            }
+            else {
+              this.showError('Error', response.data.failMessages)
+            }
+          })
+          .catch((ex) => {
+            alert('Something didn\'t work as expected. Please let the developers know.')
+          })
+      }
+      else {
+        this.showError('Error', 'Please select a file to upload (only one).')
+      }
     }
   }
 }
