@@ -14,25 +14,25 @@
           :fields="fields"
         >
           <template v-slot:cell(sunday)="data">
-            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
+            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" @clear="clear($event)" />
           </template>
           <template v-slot:cell(monday)="data">
-            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
+            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" @clear="clear($event)" />
           </template>
           <template v-slot:cell(tuesday)="data">
-            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
+            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" @clear="clear($event)" />
           </template>
           <template v-slot:cell(wednesday)="data">
-            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
+            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" @clear="clear($event)" />
           </template>
           <template v-slot:cell(thursday)="data">
-            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
+            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" @clear="clear($event)" />
           </template>
           <template v-slot:cell(friday)="data">
-            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
+            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" @clear="clear($event)" />
           </template>
           <template v-slot:cell(saturday)="data">
-            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" />
+            <bell-schedule-times :time-slot="data.value" @timeChange="timeChanged($event)" @clear="clear($event)" />
           </template>
         </b-table>
       </b-row>

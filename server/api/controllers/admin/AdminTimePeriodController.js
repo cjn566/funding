@@ -1,4 +1,6 @@
 import { Router } from 'express'
+const formidable = require('formidable')
+const csv = require('csvtojson')
 
 export default function adminTimePeriodRoutes (timePeriodService, logger) {
   const router = new Router()
@@ -7,9 +9,12 @@ export default function adminTimePeriodRoutes (timePeriodService, logger) {
   // admin functionality
   router.get('/', async (req, res) => await controller.getList(req, res))
   router.get('/students', async (req, res) => await controller.getListWithStudents(req, res))
-  router.post('/', async (req, res) => await controller.add(req, res))
-  router.post('/:periodId/:studentKeyId', async (req, res) => await controller.addStudentToPeriod(req, res))
-  router.delete('/:periodId/:studentKeyId', async (req, res) => await controller.deleteStudentFromPeriod(req, res))
+  router.get('/:periodId/students', async (req, res) => await controller.getStudentsForPeriod(req, res))
+  router.post('/', async (req, res) => await controller.saveTimePeriod(req, res))
+  router.post('/:periodId/batchAdd', async (req, res) => await controller.batchAddStudents(req, res, false))
+  router.post('/:periodId/batchReplace', async (req, res) => await controller.batchAddStudents(req, res, true))
+  router.post('/:periodId/:studentId', async (req, res) => await controller.addStudentToPeriod(req, res))
+  router.delete('/:periodId/:studentId', async (req, res) => await controller.deleteStudentFromPeriod(req, res))
   return router
 }
 
@@ -19,9 +24,39 @@ class AdminTimePeriodController {
     this.logger = logger
   }
 
+  async batchAddStudents (req, res, replaceAll) {
+    try {
+      const form = new formidable.IncomingForm()
+      const periodId = req.params.periodId
+
+      await form.parse(req, async (err, fields, files) => {
+        if (err && err.length > 0) {
+          this.logger.error(`Exception - ${err}`)
+        }
+        const jsonObj = await csv().fromFile(files.file.path)
+
+        // TODO: check file format - are we good to import?
+
+        const failMessages = this.timePeriodService.batchAddStudents(periodId, jsonObj, replaceAll)
+
+        const ret = {
+          success: true, // failMessages.length === 0,
+          failMessages
+        }
+
+        res.status(200).send(ret)
+      })
+    }
+    catch (ex) {
+      this.logger.error(`Error in matchController.processBatchCreate - ${ex.message}, stack trace - ${ex.stack}`)
+      ex.logged = true
+      res.status(500).send(ex)
+    }
+  }
+
   async deleteStudentFromPeriod (req, res) {
     try {
-      await this.timePeriodService.deleteStudentFromPeriod(req.params.periodId, req.params.studentKeyId)
+      await this.timePeriodService.deleteStudentFromPeriod(req.params.periodId, req.params.studentId)
       res.status(200).send()
     }
     catch (ex) {
@@ -35,7 +70,7 @@ class AdminTimePeriodController {
 
   async addStudentToPeriod (req, res) {
     try {
-      await this.timePeriodService.addStudentToPeriod(req.params.periodId, req.params.studentKeyId)
+      await this.timePeriodService.addStudentToPeriodById(req.params.periodId, req.params.studentId)
       res.status(200).send()
     }
     catch (ex) {
@@ -52,10 +87,41 @@ class AdminTimePeriodController {
       const periods = await this.timePeriodService.getList()
       const results = await Promise.all(periods.map(async (x) => {
         return {
-          period: x,
-          students: await this.timePeriodService.getStudentsForPeriod(x.periodname)
+          id: x.id,
+          name: x.period_name,
+          students: (await this.timePeriodService.getStudentsForPeriod(x.id)).map((x) => {
+            return {
+              id: x.id,
+              key: x.key_id,
+              firstName: x.first_name,
+              lastName: x.last_name
+            }
+          })
         }
       }))
+      res.status(200).json(results)
+    }
+    catch (ex) {
+      if (!ex.logged) {
+        this.logger.error(`Exception - ${ex.message}, stack trace - ${ex.stack}`)
+        ex.logged = true
+      }
+      res.status(500).send(ex)
+    }
+  }
+
+  async getStudentsForPeriod (req, res) {
+    try {
+      const periodId = req.params.periodId
+      const results = (await this.timePeriodService.getStudentsForPeriod(periodId)).map((x) => {
+        return {
+          id: x.id,
+          key: x.key_id,
+          firstName: x.first_name,
+          lastName: x.last_name
+        }
+      })
+
       res.status(200).json(results)
     }
     catch (ex) {
@@ -74,7 +140,8 @@ class AdminTimePeriodController {
         return {
           id: x.id,
           isActive: x.is_active,
-          periodName: x.period_name
+          periodName: x.period_name,
+          studentCount: x.cnt
         }
       })
       res.status(200).json(results)
@@ -88,7 +155,7 @@ class AdminTimePeriodController {
     }
   }
 
-  async add (req, res) {
+  async saveTimePeriod (req, res) {
     try {
       const results = await this.timePeriodService.saveTimePeriod(req.body)
       res.status(200).json(results)

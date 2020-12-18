@@ -2,8 +2,9 @@
 const groupBy = require('lodash.groupby')
 
 export default class StudentService {
-  constructor (studentRepo, logger) {
+  constructor (studentRepo, timePeriodRepo, logger) {
     this.studentRepo = studentRepo
+    this.timePeriodRepo = timePeriodRepo
     this.logger = logger
   }
 
@@ -13,7 +14,7 @@ export default class StudentService {
   }
 
   async getList () {
-    const list = await this.studentRepo.getList()
+    const list = await this.studentRepo.getStudents(null)
     return list
   }
 
@@ -54,18 +55,36 @@ export default class StudentService {
     return messages
   }
 
-  async saveStudent (id, firstName, lastName, key) {
+  async saveStudent (id, firstName, lastName, key, periods) {
     const isDupe = await this.studentRepo.checkDuplicateKey(id, key)
+    if (!periods) {
+      periods = []
+    }
 
     if (!isDupe) {
       if (id != null) {
         await this.studentRepo.update(id, firstName, lastName, key)
       }
       else {
-        await this.studentRepo.add(firstName, lastName, key)
+        id = await this.studentRepo.add(firstName, lastName, key)
+      }
+      const stuRec = (await this.studentRepo.getStudents(id))[0]
+      for (const per of periods) {
+        if (!stuRec.periods.includes(per)) {
+          this.timePeriodRepo.addStudentToPeriodById(per, stuRec.id)
+        }
+      }
+      for (const per in stuRec.periods) {
+        if (!periods.includes(per.id)) {
+          this.timePeriodRepo.deleteStudentFromPeriod(per, stuRec.id)
+        }
       }
     }
 
     return !isDupe
+  }
+
+  async search (term) {
+    return await this.studentRepo.search(term)
   }
 }

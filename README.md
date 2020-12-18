@@ -10,7 +10,7 @@ PGUSER=
 PGPASSWORD=
 DATABASE_URL=postgres://
 
-ROOT_URL=http://localhost:3000
+ROOT_URL=http://localhost:3001
 
 
 You will need to run 01_setup.sql in the SqlScripts folder, and then `npm run dev` and you are good to go.

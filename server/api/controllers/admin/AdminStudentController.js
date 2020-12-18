@@ -9,6 +9,7 @@ export default function adminStudentRoutes (studentService, logger) {
 
   // admin functionality
   router.get('/', async (req, res) => await controller.getList(req, res))
+  router.get('/search/:term', async (req, res) => await controller.search(req, res))
   router.post('/', async (req, res) => await controller.saveStudent(req, res))
   router.post('/batch', async (req, res) => await controller.processBatch(req, res))
   router.patch('/:id/delete', async (req, res) => await controller.deleteStudent(req, res))
@@ -19,6 +20,27 @@ class AdminStudentController {
   constructor (studentService, logger) {
     this.studentService = studentService
     this.logger = logger
+  }
+
+  async search (req, res) {
+    try {
+      const results = (await this.studentService.search(req.params.term.toLowerCase())).map((x) => {
+        return {
+          id: x.id,
+          firstName: x.first_name,
+          lastName: x.last_name,
+          key: x.key_id
+        }
+      })
+      res.status(200).json(results)
+    }
+    catch (ex) {
+      if (!ex.logged) {
+        this.logger.error(`Exception - ${ex.message}, stack trace - ${ex.stack}`)
+        ex.logged = true
+      }
+      res.status(500).send(ex)
+    }
   }
 
   async processBatch (req, res) {
@@ -65,7 +87,8 @@ class AdminStudentController {
           firstName: x.first_name,
           lastName: x.last_name,
           key: x.key_id,
-          isActive: x
+          isActive: x.is_active,
+          periods: x.periods
         }
       })
       res.status(200).json(results)
@@ -81,8 +104,8 @@ class AdminStudentController {
 
   async saveStudent (req, res) {
     try {
-      const { id, firstName, lastName, key } = req.body
-      const success = await this.studentService.saveStudent(id, firstName, lastName, key)
+      const { id, firstName, lastName, key, periods } = req.body
+      const success = await this.studentService.saveStudent(id, firstName, lastName, key, periods)
       res.status(200).json(success)
     }
     catch (ex) {

@@ -10,40 +10,42 @@
       </b-row>
       <div v-if="isListing">
         <b-row>
-          <b-col>
-            <b-btn @click="add()">
+          <b-col md="8" offset-md="2">
+            <b-btn variant="info" @click="add()">
               Add Student
             </b-btn>
-            <b-btn @click="upload()">
+            <b-btn variant="info" @click="upload()">
               Upload Student File
             </b-btn>
           </b-col>
-          <b-col>
-            <b-form-input v-model="filter" type="search" placeholder="Type to search" />
+          <b-col md="8" offset-md="2">
+            <b-form-input v-model="filter" type="search" placeholder="Type to search" style="margin-top:10px;" />
           </b-col>
         </b-row>
         <b-row style="margin-top:10px">
-          <b-table
-            :items="students"
-            :fields="fields"
-            :filter="filter"
-            small
-            show-empty
-            sort-icon-left
-            :sort-by.sync="sortBy"
-            :sort-desc.sync="sortDesc"
-          >
-            <template v-slot:cell(actions)="data">
-              <div style="width:200px">
-                <b-btn size="sm" variant="info" @click="editStudent(data.item)">
-                  <b-icon font-scale="1" icon="pencil" />
-                </b-btn>
-                <b-btn size="sm" variant="danger" @click="deleteStudent(data.item)">
-                  <b-icon font-scale="1" icon="trash" />
-                </b-btn>
-              </div>
-            </template>
-          </b-table>
+          <b-col md="8" offset-md="2">
+            <b-table
+              :items="students"
+              :fields="fields"
+              :filter="filter"
+              small
+              show-empty
+              sort-icon-left
+              :sort-by.sync="sortBy"
+              :sort-desc.sync="sortDesc"
+            >
+              <template v-slot:cell(actions)="data">
+                <div style="width:200px">
+                  <b-btn size="sm" variant="primary" @click="editStudent(data.item)">
+                    <b-icon font-scale="1" icon="eye" />
+                  </b-btn>
+                  <b-btn size="sm" variant="danger" @click="deleteStudent(data.item)">
+                    <b-icon font-scale="1" icon="trash" />
+                  </b-btn>
+                </div>
+              </template>
+            </b-table>
+          </b-col>
         </b-row>
       </div>
       <div v-if="isEditing">
@@ -67,6 +69,16 @@
             <b-form-group>
               <b-input v-model="$v.student.key.$model" :state="validateState($v.student.key)" placeholder="Student ID (badge ID)" />
             </b-form-group>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col md="4" offset-md="4">
+            <b-form-checkbox-group
+              v-model="student.periods"
+              :options="periodDisplay"
+              name="periods"
+              stacked
+            />
           </b-col>
         </b-row>
         <b-row>
@@ -122,7 +134,6 @@
                 v-model="files"
                 accept=".csv"
                 multiple
-                :state="fileInputError"
                 placeholder="Drop your match file here."
                 drop-placeholder="Drop file here..."
               />
@@ -168,10 +179,18 @@ export default {
       }
     }
   },
+  async fetch () {
+    const url = '/api/admin/timePeriod/'
+    await this.$axios.get(url)
+      .then((response) => {
+        this.periods = response.data
+      })
+  },
   data () {
     return {
       files: [],
       processing: false,
+      periods: [],
       mode: 'list',
       students: [],
       sortBy: 'lastName',
@@ -181,14 +200,16 @@ export default {
         id: null,
         firstName: null,
         lastName: null,
-        key: null
+        key: null,
+        periods: []
       },
       fields: [
         {
           key: 'actions',
           label: '',
           sortable: false,
-          tdClass: 'action-column'
+          tdClass: 'action-column',
+          thStyle: { width: '85px' }
         },
         {
           key: 'lastName',
@@ -209,6 +230,14 @@ export default {
     }
   },
   computed: {
+    periodDisplay () {
+      return this.periods.map((x) => {
+        return {
+          value: x.id,
+          text: x.periodName
+        }
+      })
+    },
     isEditing () {
       return this.mode === 'edit'
     },
@@ -241,7 +270,8 @@ export default {
         id: null,
         firstName: null,
         lastName: null,
-        key: null
+        key: null,
+        periods: []
       }
     },
     add () {
@@ -259,6 +289,7 @@ export default {
       this.student.firstName = val.firstName
       this.student.lastName = val.lastName
       this.student.key = val.key
+      this.student.periods = val.periods
       this.mode = 'edit'
     },
     async confirmDelete () {

@@ -21,15 +21,33 @@ export default class StudentRepo extends BaseRepo {
     return results.rows[0]
   }
 
+  async search (term) {
+    const params = [term.toLowerCase()]
+    const results = await this.withClient(client => client.query(
+      `select id, key_id, first_name, last_name
+      from student.student
+      where lower(first_name) like '%' || $1 || '%'
+      or lower(last_name) like '%' || $1 || '%'
+      or lower(key_id) like '%' || $1 || '%'
+      and is_active = true`, params))
+
+    return results.rows
+  }
+
   async deleteStudent (id) {
     const params = [id]
     await this.withClient(client => client.query(
       'update student.student set is_active = false where id = $1', params))
   }
 
-  async getList () {
+  async getStudents (id) {
+    const params = [id]
     const results = await this.withClient(client => client.query(
-      'select * from student.student where is_active = true'))
+      `select id, first_name, last_name, key_id, array_agg(sstp.period_id) as periods
+      from student.student ss
+      left outer join student.student_time_period sstp on sstp.student_id = ss.id
+      where is_active = true and $1::int is null or ss.id = $1
+      group by id, first_name, last_name, key_id`, params))
     return results.rows
   }
 
@@ -45,7 +63,12 @@ export default class StudentRepo extends BaseRepo {
   async add (firstName, lastName, key) {
     const params = [firstName, lastName, key]
     await this.withClient(client => client.query(
-      'insert into student.student(first_name, last_name, key_id) values ($1, $2, $3)', params))
+      'insert into student.student(first_name, last_name, key_id) values ($1, $2, $3);', params))
+
+    const results = await this.withClient(client => client.query(
+      'select lastval();'))
+
+    return results.rows[0].lastval
   }
 
   async update (id, firstName, lastName, key) {

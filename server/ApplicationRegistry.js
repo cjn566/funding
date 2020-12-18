@@ -18,7 +18,8 @@ export default class ApplcationRegistry {
 
   createStudentService () {
     const studentRepo = new StudentRepo(this.dbPool, this.winstonLogger)
-    const studentService = new StudentService(studentRepo, this.winstonLogger)
+    const timePeriodRepo = new TimePeriodRepo(this.dbPool, this.winstonLogger)
+    const studentService = new StudentService(studentRepo, timePeriodRepo, this.winstonLogger)
 
     return studentService
   }
