@@ -22,15 +22,12 @@
               :items="periods"
               :fields="fields"
               small
+              hover
+              borderless
               show-empty
+              class="select-row"
+              @row-clicked="toStudents"
             >
-              <template v-slot:cell(actions)="data">
-                <div>
-                  <b-btn size="sm" variant="primary" @click="toStudents(data.item)">
-                    <b-icon font-scale="1" icon="eye" />
-                  </b-btn>
-                </div>
-              </template>
               <template v-slot:head(isActive)="data">
                 <div class="text-center">
                   {{ data.label }}
@@ -116,6 +113,8 @@
               hover
               show-empty
               :empty-text="emptySearchText"
+              class="select-row"
+              @row-clicked="addStudentToPeriod"
             >
               <template v-slot:cell(actions)="data">
                 <div>
@@ -140,6 +139,8 @@
               small
               show-empty
               :empty-text="emptyPeriodStudentsText"
+              class="select-row"
+              @row-clicked="removeStudentFromPeriod"
             >
               <template v-slot:cell(actions)="data">
                 <div>
@@ -247,13 +248,6 @@ export default {
         students: null
       },
       fields: [
-        {
-          key: 'actions',
-          label: '',
-          sortable: false,
-          tdClass: 'action-column',
-          thStyle: 'width: 45px'
-        },
         {
           key: 'periodName',
           label: 'Name',

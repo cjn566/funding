@@ -31,6 +31,10 @@ export default class BellScheduleService {
   async setBellSchedule (periodId, dayOfWeek, startTime, endTime) {
     return await this.bellScheduleRepo.setBellSchedule(periodId, dayOfWeek, startTime, endTime)
   }
+
+  async clearBellSchedule (periodId, dayOfWeek) {
+    return await this.bellScheduleRepo.clearBellSchedule(periodId, dayOfWeek)
+  }
 }
 
 function getBellSchedule (bellSchedules, dayOfWeek, id) {

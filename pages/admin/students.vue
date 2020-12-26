@@ -12,14 +12,21 @@
         <b-row>
           <b-col md="8" offset-md="2">
             <b-btn variant="info" @click="add()">
-              Add Student
+              Add New Student
             </b-btn>
             <b-btn variant="info" @click="upload()">
               Upload Student File
             </b-btn>
           </b-col>
           <b-col md="8" offset-md="2">
-            <b-form-input v-model="filter" type="search" placeholder="Type to search" style="margin-top:10px;" />
+            <b-input-group style="margin-top:10px;">
+              <b-form-input v-model="filter" type="search" placeholder="Type to search" />
+              <b-input-group-append>
+                <b-button size="sm" text="Clear" variant="danger" @click="clearFilter">
+                  Clear
+                </b-button>
+              </b-input-group-append>
+            </b-input-group>
           </b-col>
         </b-row>
         <b-row style="margin-top:10px">
@@ -36,8 +43,8 @@
             >
               <template v-slot:cell(actions)="data">
                 <div style="width:200px">
-                  <b-btn size="sm" variant="primary" @click="editStudent(data.item)">
-                    <b-icon font-scale="1" icon="eye" />
+                  <b-btn size="sm" variant="info" @click="editStudent(data.item)">
+                    <b-icon font-scale="1" icon="pencil" />
                   </b-btn>
                   <b-btn size="sm" variant="danger" @click="deleteStudent(data.item)">
                     <b-icon font-scale="1" icon="trash" />
@@ -360,6 +367,9 @@ export default {
       else {
         this.showError('Error', 'Please select a file to upload (only one).')
       }
+    },
+    clearFilter () {
+      this.filter = null
     }
   }
 }

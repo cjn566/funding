@@ -131,6 +131,12 @@ export default {
       this.$axios.post(url, timeSlot).then((resp) => {
         this.showSuccess('Saved', 'Bell schedule saved')
       })
+    },
+    clear (timeSlot) {
+      const url = '/api/admin/bellSchedule/clear'
+      this.$axios.post(url, timeSlot).then((resp) => {
+        this.showSuccess('Saved', 'Bell schedule cleared')
+      })
     }
   }
 }

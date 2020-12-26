@@ -8,6 +8,14 @@ export default class BellScheduleRepo extends BaseRepo {
     return results.rows
   }
 
+  async clearBellSchedule (periodId, dayOfWeek) {
+    const params = [periodId, dayOfWeek]
+    await this.withClient(client => client.query(
+      `delete from admin.bell_schedule
+      where period_id = $1 and day_of_week = $2`, params)
+    )
+  }
+
   async setBellSchedule (periodId, dayOfWeek, startTime, endTime) {
     const params1 = [periodId, dayOfWeek]
     const getId = await this.withClient(client => client.query(
