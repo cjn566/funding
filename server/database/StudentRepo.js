@@ -19,15 +19,39 @@ export default class StudentRepo extends BaseRepo {
       `select count(*) > 0
       from student.student_time_period stp
       inner join admin.time_period atp on stp.time_period_id = atp.id
-      inner join student.student ss on ss.id = stp.sudent_id and ss.key_id = $1
+      inner join student.student ss on ss.id = stp.sudent_id and ss.key_id = $1 and ss.is_active = true
       and (current_time) between atp.start_time and atp.endTime`, params))
 
     return results.rows[0]
   }
 
-  async getList () {
+  async search (term) {
+    const params = [term.toLowerCase()]
     const results = await this.withClient(client => client.query(
-      'select * from student.student order by student.name'))
+      `select id, key_id, first_name, last_name
+      from student.student
+      where lower(first_name) like '%' || $1 || '%'
+      or lower(last_name) like '%' || $1 || '%'
+      or lower(key_id) like '%' || $1 || '%'
+      and is_active = true`, params))
+
+    return results.rows
+  }
+
+  async deleteStudent (id) {
+    const params = [id]
+    await this.withClient(client => client.query(
+      'update student.student set is_active = false where id = $1', params))
+  }
+
+  async getStudents (id) {
+    const params = [id]
+    const results = await this.withClient(client => client.query(
+      `select id, first_name, last_name, key_id, array_agg(sstp.period_id) as periods
+      from student.student ss
+      left outer join student.student_time_period sstp on sstp.student_id = ss.id
+      where is_active = true and $1::int is null or ss.id = $1
+      group by id, first_name, last_name, key_id`, params))
     return results.rows
   }
 
@@ -40,15 +64,20 @@ export default class StudentRepo extends BaseRepo {
     return results.rows[0].cnt
   }
 
-  async add (name, key) {
-    const params = [name, key]
+  async add (firstName, lastName, key) {
+    const params = [firstName, lastName, key]
     await this.withClient(client => client.query(
-      'insert into student.student(name, key_id) values ($1, $2)', params))
+      'insert into student.student(first_name, last_name, key_id) values ($1, $2, $3);', params))
+
+    const results = await this.withClient(client => client.query(
+      'select lastval();'))
+
+    return results.rows[0].lastval
   }
 
-  async update (id, name, key) {
-    const params = [id, name, key]
+  async update (id, firstName, lastName, key) {
+    const params = [id, firstName, lastName, key]
     await this.withClient(client => client.query(
-      'update student.student set name = $2, key_id = $3 where id = $1', params))
+      'update student.student set first_name = $2, last_name = $3, key_id = $4 where id = $1', params))
   }
 }

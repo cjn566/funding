@@ -2,6 +2,7 @@
   <div>
     <b-input v-model="formattedStart" class="time" placeholder="ex: 9:15 AM" :state="isValidTime(start)" />
     <b-input v-model="formattedEnd" class="time" placeholder="ex: 1:00 PM" :state="isValidTime(end)" />
+    <b-btn style="font-size: .6em; width:100px;" size="sm" variant="outline-danger" @click="clear()">Clear</b-btn>
   </div>
 </template>
 
@@ -92,6 +93,11 @@ export default {
           this.$emit('timeChange', this.timeSlot)
         }
       }
+    },
+    clear () {
+      this.$emit('clear', this.timeSlot)
+      this.start = null
+      this.end = null
     },
     isValidTime (val) {
       const valid = val && this.timePattern.test(val)

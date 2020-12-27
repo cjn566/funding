@@ -15,20 +15,30 @@ export default class TimePeriodService {
   }
 
   async saveTimePeriod (data) {
-    const { id, name, isActive } = data
+    const { id, name } = data
     if (id != null) {
-      await this.timePeriodRepo.update(id, name, isActive)
+      await this.timePeriodRepo.update(id, name, true)
     }
     else {
       await this.timePeriodRepo.add(name)
     }
   }
 
-  async addStudentToPeriod (periodName, studentKeyId) {
-    await this.timePeriodRepo.addStudentToPeriod(periodName, studentKeyId)
+  async addStudentToPeriodById (periodId, studentKeyId) {
+    await this.timePeriodRepo.addStudentToPeriodById(periodId, studentKeyId)
   }
 
-  async deleteStudentFromPeriod (periodName, studentKeyId) {
-    await this.timePeriodRepo.deleteStudentFromPeriod(periodName, studentKeyId)
+  async deleteStudentFromPeriod (periodId, studentKeyId) {
+    await this.timePeriodRepo.deleteStudentFromPeriod(periodId, studentKeyId)
+  }
+
+  async batchAddStudents (periodId, students, replaceAll) {
+    if (replaceAll) {
+      await this.timePeriodRepo.removeAllStudentsFromPeriod(periodId)
+    }
+    for (const student of students) {
+      await this.timePeriodRepo.addStudentToPeriodByKey(periodId, student.student_id)
+    }
+    return []
   }
 }
