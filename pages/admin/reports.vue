@@ -58,6 +58,7 @@
                       right
                       :date-format-options="dateFormatOptions"
                       locale="en"
+                      @input="dirtyDate()"
                     />
                   </div>
 
@@ -66,6 +67,7 @@
                       v-model="filter.startTime"
                       size="sm"
                       right
+                      @input="dirtyDate()"
                     />
                   </div>
                 </b-col>
@@ -78,6 +80,7 @@
                       right
                       :date-format-options="dateFormatOptions"
                       locale="en"
+                      @input="dirtyDate()"
                     />
                   </div>
 
@@ -86,6 +89,7 @@
                       v-model="filter.endTime"
                       size="sm"
                       right
+                      @input="dirtyDate()"
                     />
                   </div>
                 </b-col>
@@ -93,13 +97,16 @@
                   <b-btn variant="info" @click="loadHistorical(false)">
                     Show Results
                   </b-btn>
-                  <b-btn variant="info" @click="loadHistorical(true)">
+                  <b-btn variant="info" :disabled="dateChanged" @click="loadHistorical(true)">
                     Download Results
                   </b-btn>
                 </b-col>
               </b-row>
               <b-row>
                 <b-col>
+                  <b-alert v-if="dateChanged" show>
+                    Start/End has changed. Click 'Show Results' to see records for selected range.
+                  </b-alert>
                   <b-table
                     :items="historyRecords"
                     :sort-by.sync="sortBy"
@@ -155,6 +162,7 @@ export default {
   mixins: [formatMixin, validateMixin, messageMixin],
   data () {
     return {
+      dateChanged: false,
       sortBy: 'dateTime',
       sortDesc: true,
       liveRecords: [],
@@ -180,12 +188,15 @@ export default {
     this.loadLive()
     this.refreshTimer = setInterval(this.loadLive, 30000)
     this.filter.startDate = DateTime.local().toISODate()
-    this.filter.startTime = '00:00'
+    this.filter.startTime = '00:00:00'
     this.filter.endDate = DateTime.local().toISODate()
-    this.filter.endTime = '23:59'
+    this.filter.endTime = '23:59:00'
     this.loadHistorical(false)
   },
   methods: {
+    dirtyDate () {
+      this.dateChanged = true
+    },
     async loadLive () {
       if (this.$route.path.includes('reports')) {
         const url = '/api/admin/report/live'
@@ -200,11 +211,10 @@ export default {
       }
     },
     async loadHistorical (csv) {
-      const start = DateTime.fromFormat(this.filter.startDate + ' ' + this.filter.startTime, 'yyyy-MM-dd HH:mm')
-      const end = DateTime.fromFormat(this.filter.endDate + ' ' + this.filter.endTime, 'yyyy-MM-dd HH:mm')
+      this.dateChanged = false
+      const start = DateTime.fromFormat(this.filter.startDate + ' ' + this.filter.startTime, 'yyyy-MM-dd HH:mm:ss')
+      const end = DateTime.fromFormat(this.filter.endDate + ' ' + this.filter.endTime, 'yyyy-MM-dd HH:mm:ss')
       const noCache = DateTime.local().millisecond
-      const offSet = DateTime.local().offset
-      console.log('offset', offSet)
       const url = `/api/admin/report/history${csv ? '/csv' : ''}?start=${start}&end=${end}&_=${noCache}`
       await this.$axios.get(url).then((response) => {
         if (csv) {
