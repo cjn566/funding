@@ -32,26 +32,36 @@
         <b-row style="margin-top:10px">
           <b-col md="8" offset-md="2">
             <b-table
+              id="student-table"
               :items="students"
               :fields="fields"
               :filter="filter"
               small
               show-empty
+              borderless
+              class="select-row"
+              hover
               sort-icon-left
               :sort-by.sync="sortBy"
               :sort-desc.sync="sortDesc"
+              :per-page="perPage"
+              :current-page="currentPage"
+              @row-clicked="editStudent"
             >
               <template v-slot:cell(actions)="data">
-                <div style="width:200px">
-                  <b-btn size="sm" variant="info" @click="editStudent(data.item)">
-                    <b-icon font-scale="1" icon="pencil" />
-                  </b-btn>
+                <div style="width:100px">
                   <b-btn size="sm" variant="danger" @click="deleteStudent(data.item)">
                     <b-icon font-scale="1" icon="trash" />
                   </b-btn>
                 </div>
               </template>
             </b-table>
+            <b-pagination
+              v-model="currentPage"
+              :total-rows="totalRows"
+              :per-page="perPage"
+              aria-controls="student-table"
+            />
           </b-col>
         </b-row>
       </div>
@@ -203,6 +213,8 @@ export default {
       sortBy: 'lastName',
       sortDesc: false,
       filter: null,
+      currentPage: 1,
+      perPage: 25,
       student: {
         id: null,
         firstName: null,
@@ -237,6 +249,9 @@ export default {
     }
   },
   computed: {
+    totalRows () {
+      return this.students.length
+    },
     periodDisplay () {
       return this.periods.map((x) => {
         return {
