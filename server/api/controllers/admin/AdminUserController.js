@@ -1,15 +1,16 @@
 import { Router } from 'express'
+import { CheckJwt } from '../../../utils/auth'
 
 export default function adminUserRoutes (userService, logger) {
   const router = new Router()
   const controller = new AdminUserController(userService, logger)
 
   // admin functionality
-  router.get('/', async (req, res) => await controller.getUserList(req, res))
-  router.post('/', async (req, res) => await controller.saveUser(req, res))
-  router.patch('/:id/disable', async (req, res) => await controller.changeUserState(req, res, false))
-  router.patch('/:id/enable', async (req, res) => await controller.changeUserState(req, res, true))
-  router.patch('/:id/password', async (req, res) => await controller.changePassword(req, res))
+  router.get('/', CheckJwt, async (req, res) => await controller.getUserList(req, res))
+  router.post('/', CheckJwt, async (req, res) => await controller.saveUser(req, res))
+  router.patch('/:id/disable', CheckJwt, async (req, res) => await controller.changeUserState(req, res, false))
+  router.patch('/:id/enable', CheckJwt, async (req, res) => await controller.changeUserState(req, res, true))
+  router.patch('/:id/password', CheckJwt, async (req, res) => await controller.changePassword(req, res))
   return router
 }
 

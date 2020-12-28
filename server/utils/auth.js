@@ -1,36 +1,21 @@
-import jwt from 'express-jwt'
-import jwksRsa from 'jwks-rsa'
-import jwtAuthz from 'express-jwt-authz'
 
-// Authentication middleware. When used, the
-// Access Token must exist and be verified against
-// the Auth0 JSON Web Key Set
-const checkJwt = jwt({
-  // Dynamically provide a signing key
-  // based on the kid in the header and
-  // the signing keys provided by the JWKS endpoint.
-  secret: jwksRsa.expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksRequestsPerMinute: 5,
-    jwksUri: process.env.AUTH0_DOMAIN + '.well-known/jwks.json'
-  }),
+const jwt = require('jsonwebtoken')
 
-  // Validate the audience and the issuer.
-  audience: process.env.AUTH0_AUDIENCE,
-  issuer: process.env.AUTH0_DOMAIN,
-  algorithms: ['RS256']
-})
+const authenticateToken = function (req, res, next) {
+  // Gather the jwt access token from the request header
+  const authHeader = req.headers.authorization
+  const token = authHeader && authHeader.split(' ')[1]
+  if (token == null) {
+    return res.sendStatus(401)
+  } // if there isn't any token
 
-/**
- * Returns an authorization function configured to check the custom
- * 'permissions' attribute in the JWT that is set by Auth0 RBAC.
- */
-const checkPermission = (permissions) => {
-  const perms = permissions.split(',')
-  return jwtAuthz(perms,
-    { customScopeKey: 'permissions' })
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.sendStatus(403)
+    }
+    req.user = user
+    next() // pass the execution off to whatever request the client intended
+  })
 }
 
-export const CheckJwt = checkJwt
-export const CheckPermission = checkPermission
+export const CheckJwt = authenticateToken

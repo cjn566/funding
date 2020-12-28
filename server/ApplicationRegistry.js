@@ -3,12 +3,14 @@ import StudentRepo from './database/StudentRepo'
 import UserRepo from './database/UserRepo'
 import TimePeriodRepo from './database/TimePeriodRepo'
 import BellScheduleRepo from './database/BellScheduleRepo'
+import ReportRepo from './database/ReportRepo'
 
 // Services
 import StudentService from './application/StudentService'
 import UserService from './application/UserService'
 import TimePeriodService from './application/TimePeriodService'
 import BellScheduleService from './application/BellScheduleService'
+import ReportService from './application/ReportService'
 
 export default class ApplcationRegistry {
   constructor (dbPool, winstonLogger) {
@@ -44,5 +46,12 @@ export default class ApplcationRegistry {
     const bellScheduleService = new BellScheduleService(bellScheduleRepo, timePeriodRepo, this.winstonLogger)
 
     return bellScheduleService
+  }
+
+  createReportService () {
+    const reportRepo = new ReportRepo(this.dbPool, this.winstonLogger)
+    const reportService = new ReportService(reportRepo, this.winstonLogger)
+
+    return reportService
   }
 }

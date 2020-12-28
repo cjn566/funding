@@ -8,8 +8,8 @@ create table student.student(
   last_name text not null,
 	key_id text not null,
   is_active boolean not null default true,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
 create table admin.user(
@@ -20,16 +20,16 @@ create table admin.user(
 	password text not null,
   salt text not null,
   is_active boolean not null default true,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc'),
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP,
   last_login timestamp with time zone
 );
 create table lookup.time_period (
   id serial primary key,
   period_name text not null unique,
   is_active boolean not null default true,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
 create table lookup.day_of_week(
@@ -53,22 +53,67 @@ create table admin.bell_schedule(
   day_of_week text not null references lookup.day_of_week,
 	start_time time without time zone not null,
 	end_time time without time zone not null,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
 create table student.student_time_period (
 	student_id int references student.student not null,
 	period_id int references lookup.time_period not null,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
+
 create table student.student_access(
-	student_id int references student.student not null,
-	period_id int references lookup.time_period not null,
-  day_of_week text references lookup.day_of_week not null,
+	student_key text not null,
+	student_id int references student.student,
 	success boolean not null,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
+
+
+
+
+create schema Logging;
+
+drop table if exists logging.winstonLogging cascade;
+drop table if exists logging.level;
+
+create table logging.level
+(
+  id smallint not null,
+  level varchar(20) not null,
+  nodeLevel varchar(10) not null,
+  constraint pk_logging_level_id primary key(id),
+  constraint uk_logging_level_level unique(nodeLevel)
+);
+
+create table logging.winstonLogging
+(
+  id serial not null,
+  level smallint not null,
+  message text not null,
+  host text null,
+  pid integer null,
+  meta json not null,
+  timestamp timestamp without time zone DEFAULT now() not null,
+  constraint pk_logging_winston_logging_id primary key(id),
+  constraint fk_logging_level foreign key (level) REFERENCES logging.level(id)
+);
+
+create index idx_logging_winstonLogging_level_message
+on logging.winstonLogging(level, message);
+
+create or replace function logging.addLog(nodeLevel varchar(10), message text, host text, pid integer, meta json)
+returns integer as
+$$
+  insert into logging.winstonLogging(level, message, host, meta)
+  select id, message, host, meta
+  from logging.level l
+  where l.nodeLevel = nodeLevel
+  limit 1
+  returning id;
+$$
+language sql volatile;

@@ -3,7 +3,7 @@
     <b-row style="margin-top:20px" class="page-header">
       <b-col>
         <h1 style="padding-top:12px">
-          Welcome to Keycard Access
+          Welcome to Keycard Access Debug Login Page
         </h1>
       </b-col>
     </b-row>
@@ -19,6 +19,11 @@
         </b-btn>
       </b-col>
     </b-row>
+    <b-row v-if="mostRecentResult != null">
+      <b-col>
+        Most recent results: {{ this.mostRecent }}
+      </b-col>
+    </b-row>
   </b-container>
 </template>
 
@@ -27,14 +32,20 @@
 export default {
   data () {
     return {
-      keyVal: null
+      keyVal: null,
+      mostRecentResult: null
+    }
+  },
+  computed: {
+    mostRecent () {
+      return this.mostRecentResult ? 'Success' : 'Failure'
     }
   },
   methods: {
     go () {
       const url = `/api/student/${this.keyVal}`
       this.$axios.get(url).then((resp) => {
-        console.log(resp.data)
+        this.mostRecentResult = resp.data
       })
     }
   }

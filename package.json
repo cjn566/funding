@@ -24,6 +24,8 @@
     "express": "^4.16.4",
     "express-jwt": "^6.0.0",
     "formidable": "^1.2.2",
+    "js-file-download": "^0.4.12",
+    "json2csv": "^5.0.5",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
     "lodash.clone": "^4.5.0",

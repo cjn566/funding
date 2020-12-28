@@ -1,14 +1,14 @@
 <template>
   <b-container>
     <b-form-group>
-      <b-row class="page-header">
-        <b-col>
-          <h1>
-            Users
-          </h1>
-        </b-col>
-      </b-row>
-      <div v-if="!isAdding && !isEditing">
+      <div v-if="isList">
+        <b-row class="page-header">
+          <b-col>
+            <h1>
+              Users
+            </h1>
+          </b-col>
+        </b-row>
         <b-row>
           <b-btn @click="addUser()">
             Add User
@@ -19,9 +19,10 @@
             :items="users"
             :fields="fields"
             hover
-            outlined
             small
             show-empty
+            borderless
+            class="select-row"
             @row-clicked="editUser"
           >
             <template v-slot:head(is_active)="data">
@@ -48,7 +49,18 @@
           </b-table>
         </b-row>
       </div>
-      <div v-if="isChangingPassword">
+
+      <div v-if="isPasswordChange">
+        <b-row class="page-header">
+          <b-col>
+            <h1>
+              <b-btn variant="primary" @click="cancelPwChange()">
+                <b-icon icon="arrow-90deg-left" />
+              </b-btn>
+              Change Password
+            </h1>
+          </b-col>
+        </b-row>
         <b-row>
           <b-col md="4" offset-md="4">
             <b-form-group>
@@ -76,7 +88,18 @@
           </b-col>
         </b-row>
       </div>
-      <div v-if="(isAdding || isEditing) && !isChangingPassword">
+
+      <div v-if="isUser">
+        <b-row class="page-header">
+          <b-col>
+            <h1>
+              <b-btn variant="primary" @click="cancelUser()">
+                <b-icon icon="arrow-90deg-left" />
+              </b-btn>
+              User Details
+            </h1>
+          </b-col>
+        </b-row>
         <b-row>
           <b-col md="4" offset-md="4">
             <b-form-group>
@@ -178,8 +201,7 @@ export default {
   data () {
     return {
       users: [],
-      isAdding: false,
-      isChangingPassword: false,
+      mode: 'list',
       passwordChange: {
         one: null,
         two: null
@@ -222,6 +244,15 @@ export default {
     }
   },
   computed: {
+    isList () {
+      return this.mode === 'list'
+    },
+    isUser () {
+      return this.mode === 'user'
+    },
+    isPasswordChange () {
+      return this.mode === 'password'
+    },
     isEditing () {
       return this.user.id != null
     }
@@ -231,7 +262,7 @@ export default {
   },
   methods: {
     cancelPwChange () {
-      this.isChangingPassword = false
+      this.mode = 'user'
       this.passwordChange = {
         one: null,
         two: null
@@ -252,10 +283,11 @@ export default {
       }
     },
     changePassword () {
-      this.isChangingPassword = true
+      this.mode = 'password'
     },
     editUser (record, idx) {
       this.$v.$reset()
+      this.mode = 'user'
       this.user.id = record.id
       this.user.first = record.first_name
       this.user.last = record.last_name
@@ -263,12 +295,12 @@ export default {
       this.user.isActive = record.is_active
     },
     addUser () {
-      this.isAdding = true
+      this.mode = 'user'
       this.$v.$reset()
     },
     cancelUser () {
       this.resetUser()
-      this.isAdding = false
+      this.mode = 'list'
     },
     resetUser () {
       this.user = {

@@ -45,7 +45,7 @@ export default class UserRepo extends BaseRepo {
   async updateLogin (email) {
     const params = [email]
     await this.withClient(client => client.query(
-      'update admin.user set last_login = (now() at time zone \'utc\') where email = $1 ', params))
+      'update admin.user set last_login = CURRENT_TIMESTAMP where email = $1 ', params))
   }
 
   async updateUser (id, email, first, last) {
