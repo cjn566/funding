@@ -2,23 +2,36 @@ import BaseRepo from './BaseRepo'
 
 export default class StudentRepo extends BaseRepo {
   async checkAccess (studentKey) {
-    if (studentKey === 1) {
-      return true
-    }
-    if (studentKey === 2) {
-      return false
-    }
+    let success = false
+    let params = []
+    const debug = process.env.DEBUG_MODE && process.env.DEBUG_MODE === 'true'
 
-    const params = [studentKey]
+    if (debug && studentKey === '1') {
+      success = true
+    }
+    else if (debug && studentKey === '2') {
+      success = false
+    }
+    else {
+      // not debug mode, check against actual databse
+      params = [studentKey]
 
-    const results = await this.withClient(client => client.query(
-      `select count(*) > 0
-      from student.student_time_period stp
-      inner join admin.time_period atp on stp.time_period_id = atp.id
-      inner join student.student ss on ss.id = stp.sudent_id and ss.key_id = $1 and ss.is_active = true
+      const results = await this.withClient(client => client.query(
+        `select count(*) > 0 as success
+        from student.student_time_period stp
+        inner join lookup.time_period atp on stp.period_id = atp.id
+        inner join student.student ss on ss.id = stp.student_id and ss.key_id = $1 and ss.is_active = true
       and (current_time) between atp.start_time and atp.endTime`, params))
 
-    return results.rows[0]
+      success = results.rows[0].success
+    }
+
+    params = [studentKey, success]
+    await this.withClient(client => client.query(
+      `insert into student.student_access(student_key, student_id, success)
+        values($1, (select id from student.student where key_id = $1), $2)`, params))
+
+    return success
   }
 
   async search (term) {

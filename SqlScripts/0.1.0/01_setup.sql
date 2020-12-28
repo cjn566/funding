@@ -8,8 +8,8 @@ create table student.student(
   last_name text not null,
 	key_id text not null,
   is_active boolean not null default true,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
 create table admin.user(
@@ -20,16 +20,16 @@ create table admin.user(
 	password text not null,
   salt text not null,
   is_active boolean not null default true,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc'),
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP,
   last_login timestamp with time zone
 );
 create table lookup.time_period (
   id serial primary key,
   period_name text not null unique,
   is_active boolean not null default true,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
 create table lookup.day_of_week(
@@ -53,22 +53,22 @@ create table admin.bell_schedule(
   day_of_week text not null references lookup.day_of_week,
 	start_time time without time zone not null,
 	end_time time without time zone not null,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
 create table student.student_time_period (
 	student_id int references student.student not null,
 	period_id int references lookup.time_period not null,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
 
+
 create table student.student_access(
-	student_id int references student.student not null,
-	period_id int references lookup.time_period not null,
-  day_of_week text references lookup.day_of_week not null,
+	student_key text not null,
+	student_id int references student.student,
 	success boolean not null,
-	date_created timestamp with time zone not null default (now() at time zone 'utc'),
-	last_updated timestamp with time zone not null default (now() at time zone 'utc')
+	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
+	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
