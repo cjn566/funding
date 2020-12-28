@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { CheckJwt } from '../../../utils/auth'
 const formidable = require('formidable')
 const csv = require('csvtojson')
 
@@ -7,14 +8,14 @@ export default function adminTimePeriodRoutes (timePeriodService, logger) {
   const controller = new AdminTimePeriodController(timePeriodService, logger)
 
   // admin functionality
-  router.get('/', async (req, res) => await controller.getList(req, res))
-  router.get('/students', async (req, res) => await controller.getListWithStudents(req, res))
-  router.get('/:periodId/students', async (req, res) => await controller.getStudentsForPeriod(req, res))
-  router.post('/', async (req, res) => await controller.saveTimePeriod(req, res))
-  router.post('/:periodId/batchAdd', async (req, res) => await controller.batchAddStudents(req, res, false))
-  router.post('/:periodId/batchReplace', async (req, res) => await controller.batchAddStudents(req, res, true))
-  router.post('/:periodId/:studentId', async (req, res) => await controller.addStudentToPeriod(req, res))
-  router.delete('/:periodId/:studentId', async (req, res) => await controller.deleteStudentFromPeriod(req, res))
+  router.get('/', CheckJwt, async (req, res) => await controller.getList(req, res))
+  router.get('/students', CheckJwt, async (req, res) => await controller.getListWithStudents(req, res))
+  router.get('/:periodId/students', CheckJwt, async (req, res) => await controller.getStudentsForPeriod(req, res))
+  router.post('/', CheckJwt, async (req, res) => await controller.saveTimePeriod(req, res))
+  router.post('/:periodId/batchAdd', CheckJwt, async (req, res) => await controller.batchAddStudents(req, res, false))
+  router.post('/:periodId/batchReplace', CheckJwt, async (req, res) => await controller.batchAddStudents(req, res, true))
+  router.post('/:periodId/:studentId', CheckJwt, async (req, res) => await controller.addStudentToPeriod(req, res))
+  router.delete('/:periodId/:studentId', CheckJwt, async (req, res) => await controller.deleteStudentFromPeriod(req, res))
   return router
 }
 

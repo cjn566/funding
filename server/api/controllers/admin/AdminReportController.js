@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { Parser } from 'json2csv'
+import { CheckJwt } from '../../../utils/auth'
 const { DateTime } = require('luxon')
 
 export default function adminReportRoutes (reportService, logger) {
@@ -7,9 +8,9 @@ export default function adminReportRoutes (reportService, logger) {
   const controller = new AdminReportController(reportService, logger)
 
   // admin functionality
-  router.get('/live', async (req, res) => await controller.getLive(req, res))
-  router.get('/history', async (req, res) => await controller.getHistorical(req, res))
-  router.get('/history/csv', async (req, res) => await controller.getHistoricalCsv(req, res))
+  router.get('/live', CheckJwt, async (req, res) => await controller.getLive(req, res))
+  router.get('/history', CheckJwt, async (req, res) => await controller.getHistorical(req, res))
+  router.get('/history/csv', CheckJwt, async (req, res) => await controller.getHistoricalCsv(req, res))
   return router
 }
 
@@ -70,17 +71,17 @@ class AdminReportController {
   async getHistoricalCsv (req, res) {
     try {
       const { start, end } = req.query
-      // TODO: add in paging
+      // TODO: add in paging?
       const results = await this.reportService.getHistorical(start, end, 1, 50000)
 
       let data = 'No Results'
       if (results.length > 0) {
         const records = results.map((x) => {
           return {
-            studentId: x.student_key,
-            student: x.last_name == null ? 'No Match' : (x.last_name + ', ' + x.first_name),
-            success: x.success,
-            scannedDateTime: formatForExport(x.date_created)
+            student_id: x.student_key,
+            name: x.last_name == null ? 'No Match' : (x.last_name + ', ' + x.first_name),
+            access_granted: x.success ? 'Yes' : 'No',
+            scanned_date_time: x.date_created.toLocaleString(DateTime.DATETIME_SHORT)
           }
         })
 
@@ -100,12 +101,4 @@ class AdminReportController {
       res.status(500).send(ex)
     }
   }
-}
-
-function formatForExport (date) {
-  console.log('dte', date)
-  const dt = DateTime.fromISO(date.toString())
-  console.log('dt', dt)
-  const dteStr = dt.toLocaleString(DateTime.DATETIME_SHORT)
-  return dteStr
 }

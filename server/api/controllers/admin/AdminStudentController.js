@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { CheckJwt } from '../../../utils/auth'
 
 const formidable = require('formidable')
 const csv = require('csvtojson')
@@ -8,11 +9,11 @@ export default function adminStudentRoutes (studentService, logger) {
   const controller = new AdminStudentController(studentService, logger)
 
   // admin functionality
-  router.get('/', async (req, res) => await controller.getList(req, res))
-  router.get('/search/:term', async (req, res) => await controller.search(req, res))
-  router.post('/', async (req, res) => await controller.saveStudent(req, res))
-  router.post('/batch', async (req, res) => await controller.processBatch(req, res))
-  router.patch('/:id/delete', async (req, res) => await controller.deleteStudent(req, res))
+  router.get('/', CheckJwt, async (req, res) => await controller.getList(req, res))
+  router.get('/search/:term', CheckJwt, async (req, res) => await controller.search(req, res))
+  router.post('/', CheckJwt, async (req, res) => await controller.saveStudent(req, res))
+  router.post('/batch', CheckJwt, async (req, res) => await controller.processBatch(req, res))
+  router.patch('/:id/delete', CheckJwt, async (req, res) => await controller.deleteStudent(req, res))
   return router
 }
 

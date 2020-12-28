@@ -72,3 +72,48 @@ create table student.student_access(
 	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
 	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
 );
+
+
+
+
+create schema Logging;
+
+drop table if exists logging.winstonLogging cascade;
+drop table if exists logging.level;
+
+create table logging.level
+(
+  id smallint not null,
+  level varchar(20) not null,
+  nodeLevel varchar(10) not null,
+  constraint pk_logging_level_id primary key(id),
+  constraint uk_logging_level_level unique(nodeLevel)
+);
+
+create table logging.winstonLogging
+(
+  id serial not null,
+  level smallint not null,
+  message text not null,
+  host text null,
+  pid integer null,
+  meta json not null,
+  timestamp timestamp without time zone DEFAULT now() not null,
+  constraint pk_logging_winston_logging_id primary key(id),
+  constraint fk_logging_level foreign key (level) REFERENCES logging.level(id)
+);
+
+create index idx_logging_winstonLogging_level_message
+on logging.winstonLogging(level, message);
+
+create or replace function logging.addLog(nodeLevel varchar(10), message text, host text, pid integer, meta json)
+returns integer as
+$$
+  insert into logging.winstonLogging(level, message, host, meta)
+  select id, message, host, meta
+  from logging.level l
+  where l.nodeLevel = nodeLevel
+  limit 1
+  returning id;
+$$
+language sql volatile;

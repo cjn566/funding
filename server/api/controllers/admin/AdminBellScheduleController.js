@@ -1,13 +1,14 @@
 import { Router } from 'express'
+import { CheckJwt } from '../../../utils/auth'
 
 export default function adminBellScheduleRoutes (bellScheduleService, logger) {
   const router = new Router()
   const controller = new AdminBellScheduleRoutes(bellScheduleService, logger)
 
   // admin functionality
-  router.get('/', async (req, res) => await controller.getList(req, res))
-  router.post('/', async (req, res) => await controller.updateBellSchedule(req, res))
-  router.post('/clear', async (req, res) => await controller.clearBellSchedule(req, res))
+  router.get('/', CheckJwt, async (req, res) => await controller.getList(req, res))
+  router.post('/', CheckJwt, async (req, res) => await controller.updateBellSchedule(req, res))
+  router.post('/clear', CheckJwt, async (req, res) => await controller.clearBellSchedule(req, res))
   return router
 }
 
