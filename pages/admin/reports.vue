@@ -186,7 +186,7 @@ export default {
   },
   mounted () {
     this.loadLive()
-    this.refreshTimer = setInterval(this.loadLive, 30000)
+    this.refreshTimer = setInterval(this.loadLive, 10000)
     this.filter.startDate = DateTime.local().toISODate()
     this.filter.startTime = '00:00:00'
     this.filter.endDate = DateTime.local().toISODate()

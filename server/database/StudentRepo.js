@@ -19,9 +19,11 @@ export default class StudentRepo extends BaseRepo {
       const results = await this.withClient(client => client.query(
         `select count(*) > 0 as success
         from student.student_time_period stp
-        inner join lookup.time_period atp on stp.period_id = atp.id
+        inner join lookup.time_period ltp on stp.period_id = ltp.id and ltp.is_active = true
+        inner join admin.bell_schedule bs on bs.period_id = ltp.id
         inner join student.student ss on ss.id = stp.student_id and ss.key_id = $1 and ss.is_active = true
-      and (current_time) between atp.start_time and atp.endTime`, params))
+        inner join lookup.day_of_week dow on dow.short = bs.day_of_week
+        and (current_time) between bs.start_time and bs.end_time and dow.id = date_part( 'dow', current_timestamp);`, params))
 
       success = results.rows[0].success
     }
