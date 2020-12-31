@@ -13,9 +13,9 @@ module.exports = {
       { hid: 'description', name: 'description', content: 'Keycard Student Access' }
     ]
   },
-  server: {
-    port: 3001
-  },
+  // server: {
+  //   port: 3001
+  // },
   /*
   ** Customize the progress-bar color
   */
