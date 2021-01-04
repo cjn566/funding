@@ -22,7 +22,7 @@ export default class StudentService {
     await this.studentRepo.deleteStudent(id)
   }
 
-  async batchCreateStudents (students) {
+  async batchCreateStudents (students, addMissingIgnoreDupes) {
     // check for duplicate keys within the file, return error if so
     const keys = groupBy(students, 'key')
     let messages = []
@@ -38,10 +38,16 @@ export default class StudentService {
       const dupeCheckerPromises = students.map(async (stu) => {
         stu.duplicate = await this.studentRepo.checkDuplicateKey(null, stu.key)
       })
+
       await Promise.all(dupeCheckerPromises).then(() => {
-        messages = students.filter(x => x.duplicate === true).map(x =>
-          `Key ${x.key} is already associated with a student.`
-        )
+        if (addMissingIgnoreDupes) {
+          students = students.filter(x => x.duplicate === false)
+        }
+        else {
+          messages = students.filter(x => x.duplicate === true).map(x =>
+            `Key ${x.key} is already associated with a student.`
+          )
+        }
       })
     }
 

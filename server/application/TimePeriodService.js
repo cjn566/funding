@@ -17,11 +17,15 @@ export default class TimePeriodService {
   async saveTimePeriod (data) {
     const { id, name } = data
     if (id != null) {
-      await this.timePeriodRepo.update(id, name, true)
+      await this.timePeriodRepo.update(id, name)
     }
     else {
       await this.timePeriodRepo.add(name)
     }
+  }
+
+  async deactivateTimePeriod (id) {
+    await this.timePeriodRepo.deactivateTimePeriod(id)
   }
 
   async addStudentToPeriodById (periodId, studentKeyId) {
@@ -37,7 +41,7 @@ export default class TimePeriodService {
       await this.timePeriodRepo.removeAllStudentsFromPeriod(periodId)
     }
     for (const student of students) {
-      await this.timePeriodRepo.addStudentToPeriodByKey(periodId, student.student_id)
+      await this.timePeriodRepo.addStudentToPeriodByKey(periodId, student.key)
     }
     return []
   }

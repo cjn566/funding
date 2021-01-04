@@ -39,21 +39,19 @@
               small
               show-empty
               borderless
-              class="select-row"
-              hover
               sort-icon-left
               :sort-by.sync="sortBy"
               :sort-desc.sync="sortDesc"
               :per-page="perPage"
               :current-page="currentPage"
-              @row-clicked="editStudent"
             >
               <template v-slot:cell(actions)="data">
-                <div style="width:100px">
-                  <b-btn size="sm" variant="danger" @click="deleteStudent(data.item)">
-                    <b-icon font-scale="1" icon="trash" />
-                  </b-btn>
-                </div>
+                <b-btn size="sm" variant="danger" @click="deleteStudent(data.item)">
+                  <b-icon font-scale="1" icon="trash" />
+                </b-btn>
+                <b-btn size="sm" variant="info" @click="editStudent(data.item)">
+                  <b-icon font-scale="1" icon="pencil" />
+                </b-btn>
               </template>
             </b-table>
             <b-pagination
@@ -228,7 +226,7 @@ export default {
           label: '',
           sortable: false,
           tdClass: 'action-column',
-          thStyle: { width: '85px' }
+          thStyle: 'width:90px'
         },
         {
           key: 'lastName',

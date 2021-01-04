@@ -11,7 +11,7 @@
       <b-row>
         <b-col>
           <b-tabs content-class="mt-3">
-            <b-tab title="Live View">
+            <b-tab title="Live View" active>
               Showing most recent 20 keycard scans <br>
               Last Updated: {{ lastUpdatedDisplay }}
               <b-table
@@ -47,7 +47,7 @@
                 </template>
               </b-table>
             </b-tab>
-            <b-tab title="Historical View" active>
+            <b-tab title="Historical View">
               <b-row>
                 <b-col>
                   Start:
@@ -186,7 +186,7 @@ export default {
   },
   mounted () {
     this.loadLive()
-    this.refreshTimer = setInterval(this.loadLive, 10000)
+    this.refreshTimer = setInterval(this.loadLive, 2000)
     this.filter.startDate = DateTime.local().toISODate()
     this.filter.startTime = '00:00:00'
     this.filter.endDate = DateTime.local().toISODate()

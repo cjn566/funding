@@ -15,7 +15,7 @@ export function addApiRoutes (app, keycardPool, logger) {
   app.use('/student', studentRoutes(registry.createStudentService(), logger))
   app.use('/auth', authRoutes(registry.createUserService(), logger))
   app.use('/admin/users', adminUserRoutes(registry.createUserService(), logger))
-  app.use('/admin/timeperiod', adminTimePeriodRoutes(registry.createTimePeriodService(), logger))
+  app.use('/admin/timeperiod', adminTimePeriodRoutes(registry.createTimePeriodService(), registry.createStudentService(), logger))
   app.use('/admin/student', adminStudentRoutes(registry.createStudentService(), logger))
   app.use('/admin/bellSchedule', adminBellScheduleRoutes(registry.createBellScheduleService(), logger))
   app.use('/admin/report', adminReportRoutes(registry.createReportService(), logger))
