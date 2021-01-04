@@ -18,6 +18,7 @@
                 :items="liveRecords"
                 :sort-by.sync="sortBy"
                 :sort-desc.sync="sortDesc"
+                :tbody-tr-class="rowClass"
               >
                 <template v-slot:head(success)="data">
                   <div class="text-center">
@@ -31,8 +32,11 @@
                 </template>
 
                 <template v-slot:cell(student)="data">
-                  <div>
-                    {{ data.value || 'No Match' }}
+                  <div v-if="data.value">
+                    {{ data.value }}
+                  </div>
+                  <div v-else>
+                    <strong>No Match</strong>
                   </div>
                 </template>
                 <template v-slot:cell(success)="data">
@@ -125,8 +129,11 @@
                     </template>
 
                     <template v-slot:cell(student)="data">
-                      <div>
-                        {{ data.value || 'No Match' }}
+                      <div v-if="data.value">
+                        {{ data.value }}
+                      </div>
+                      <div v-else>
+                        <strong>No Match</strong>
                       </div>
                     </template>
                     <template v-slot:cell(success)="data">
@@ -194,6 +201,9 @@ export default {
     this.loadHistorical(false)
   },
   methods: {
+    rowClass (item, type) {
+      return item.success ? 'text-success' : 'text-danger'
+    },
     dirtyDate () {
       this.dateChanged = true
     },

@@ -52,7 +52,9 @@ module.exports = {
   ** Axios module configuration
   ** See https://axios.nuxtjs.org/options
   */
-  axios: {},
+  axios: {
+    baseURL: process.env.BASE_API_URL
+  },
   /*
   ** Auth module configuration
   ** See https://auth.nuxtjs.org

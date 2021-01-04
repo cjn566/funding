@@ -132,7 +132,7 @@
             </b-btn>
           </b-col>
           <b-col md="6">
-            <b-form-input v-model="studentSearch" type="search" placeholder="Search for a student to add or remove" @keyup="search" />
+            <b-form-input ref="search" v-model="studentSearch" type="search" placeholder="Search for a student to add or remove" @keyup="search" />
           </b-col>
         </b-row>
         <b-row>
@@ -501,6 +501,7 @@ export default {
       const url = `/api/admin/timeperiod/${this.period.id}/${item.id}`
       await this.$axios.delete(url).then(() => {
         this.fetchStudents()
+        this.$refs.search.$el.focus()
       })
     },
     async addStudentToPeriod (item) {
@@ -509,6 +510,7 @@ export default {
         this.searchResults = null
         this.studentSearch = ''
         this.fetchStudents()
+        this.$refs.search.$el.focus()
       })
     },
     async deactivateTimePeriod (item) {
