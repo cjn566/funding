@@ -36,6 +36,18 @@ export default class StudentRepo extends BaseRepo {
     return success
   }
 
+  async checkRapidScan (studentKey) {
+    const params = [studentKey]
+
+    const results = await this.withClient(client => client.query(
+      `select count(*) > 1 as flagged
+      from student.student_access ssa
+      inner join student.student ss on ss.id = ssa.student_id and ss.key_id = $1
+      where ssa.date_created > NOW() - INTERVAL '5 minutes';`, params))
+
+    return results.rows[0].flagged
+  }
+
   async search (term) {
     const params = [term.toLowerCase()]
     const results = await this.withClient(client => client.query(

@@ -2,7 +2,7 @@
   <div>
     <b-input v-model="formattedStart" class="time" placeholder="ex: 9:15 AM" :state="isValidTime(start)" />
     <b-input v-model="formattedEnd" class="time" placeholder="ex: 1:00 PM" :state="isValidTime(end)" />
-    <b-btn style="font-size: .6em; width:100px;" size="sm" variant="outline-danger" @click="clear()">
+    <b-btn v-if="canClear" style="font-size: .6em; width:100px;" size="sm" variant="outline-danger" @click="clear()">
       Clear
     </b-btn>
   </div>
@@ -30,6 +30,9 @@ export default {
     }
   },
   computed: {
+    canClear () {
+      return this.start != null || this.end != null
+    },
     formattedStart: {
       get () {
         return this.formatted('start')

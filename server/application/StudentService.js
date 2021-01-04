@@ -9,8 +9,7 @@ export default class StudentService {
   }
 
   async checkAccess (studentKey) {
-    const hasAccess = await this.studentRepo.checkAccess(studentKey)
-    return hasAccess
+    return await this.studentRepo.checkAccess(studentKey)
   }
 
   async getList () {
