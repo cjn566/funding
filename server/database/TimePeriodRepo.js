@@ -23,10 +23,16 @@ export default class TimePeriodRepo extends BaseRepo {
       'insert into lookup.time_period(period_name) values ($1)', params))
   }
 
-  async update (id, name, isActive) {
-    const params = [id, name, isActive]
+  async update (id, name) {
+    const params = [id, name]
     await this.withClient(client => client.query(
-      'update lookup.time_period set period_name = $2, is_active = $3 where id = $1', params))
+      'update lookup.time_period set period_name = $2 where id = $1', params))
+  }
+
+  async deactivateTimePeriod (id) {
+    const params = [id]
+    await this.withClient(client => client.query(
+      'update lookup.time_period set is_active = false where id = $1', params))
   }
 
   async addStudentToPeriodById (periodId, studentId) {

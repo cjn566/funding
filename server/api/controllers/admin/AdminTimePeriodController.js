@@ -11,6 +11,7 @@ export default function adminTimePeriodRoutes (timePeriodService, logger) {
   router.get('/', CheckJwt, async (req, res) => await controller.getList(req, res))
   router.get('/students', CheckJwt, async (req, res) => await controller.getListWithStudents(req, res))
   router.get('/:periodId/students', CheckJwt, async (req, res) => await controller.getStudentsForPeriod(req, res))
+  router.post('/:periodId/deactivate', CheckJwt, async (req, res) => await controller.deactivateTimePeriod(req, res))
   router.post('/', CheckJwt, async (req, res) => await controller.saveTimePeriod(req, res))
   router.post('/:periodId/batchAdd', CheckJwt, async (req, res) => await controller.batchAddStudents(req, res, false))
   router.post('/:periodId/batchReplace', CheckJwt, async (req, res) => await controller.batchAddStudents(req, res, true))
@@ -20,9 +21,24 @@ export default function adminTimePeriodRoutes (timePeriodService, logger) {
 }
 
 class AdminTimePeriodController {
-  constructor (timePeriodService, logger) {
+  constructor (timePeriodService, studentService, logger) {
     this.timePeriodService = timePeriodService
+    this.studentService = studentService
     this.logger = logger
+  }
+
+  async deactivateTimePeriod (req, res) {
+    try {
+      await this.timePeriodService.deactivateTimePeriod(req.params.periodId)
+      res.status(200).send()
+    }
+    catch (ex) {
+      if (!ex.logged) {
+        this.logger.error(`Exception - ${ex.message}, stack trace - ${ex.stack}`)
+        ex.logged = true
+      }
+      res.status(500).send(ex)
+    }
   }
 
   async batchAddStudents (req, res, replaceAll) {
@@ -36,12 +52,22 @@ class AdminTimePeriodController {
         }
         const jsonObj = await csv().fromFile(files.file.path)
 
-        // TODO: check file format - are we good to import?
+        const students = jsonObj.map((student) => {
+          return {
+            key: student.student_id.trim(),
+            first: student.first_name.trim(),
+            last: student.last_name.trim()
+          }
+        })
 
-        const failMessages = this.timePeriodService.batchAddStudents(periodId, jsonObj, replaceAll)
+        let failMessages = await this.studentService.batchCreateStudents(students, true)
+
+        if (failMessages.length === 0) {
+          failMessages = await this.timePeriodService.batchAddStudents(periodId, students, replaceAll)
+        }
 
         const ret = {
-          success: true, // failMessages.length === 0,
+          success: failMessages.length === 0,
           failMessages
         }
 

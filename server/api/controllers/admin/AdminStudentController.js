@@ -62,7 +62,7 @@ class AdminStudentController {
           }
         })
 
-        const failMessages = await this.studentService.batchCreateStudents(students)
+        const failMessages = await this.studentService.batchCreateStudents(students, false)
 
         const ret = {
           success: failMessages.length === 0,

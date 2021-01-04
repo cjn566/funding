@@ -22,16 +22,22 @@
               :items="periods"
               :fields="fields"
               small
-              hover
               borderless
               show-empty
-              class="select-row"
-              @row-clicked="toStudents"
             >
               <template v-slot:head(isActive)="data">
                 <div class="text-center">
                   {{ data.label }}
                 </div>
+              </template>
+
+              <template v-slot:cell(actions)="data">
+                <b-btn size="sm" variant="danger" @click="deactivatePeriod(data.item)">
+                  <b-icon font-scale="1" icon="trash" />
+                </b-btn>
+                <b-btn size="sm" variant="info" @click="toStudents(data.item)">
+                  <b-icon font-scale="1" icon="pencil" />
+                </b-btn>
               </template>
               <template v-slot:cell(isActive)="data">
                 <div class="text-center">
@@ -39,6 +45,36 @@
                 </div>
               </template>
             </b-table>
+          </b-col>
+        </b-row>
+      </div>
+
+      <div v-if="isDeleteMode">
+        <b-row class="page-header">
+          <b-col>
+            <h1>
+              <b-btn variant="primary" @click="toList()">
+                <b-icon icon="arrow-90deg-left" />
+              </b-btn>
+              Remove Period
+            </h1>
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col md="6" offset-md="3">
+            Are you sure you want to delete {{ period.periodName }}?  You cannot undo this.
+          </b-col>
+        </b-row>
+        <b-row>
+          <b-col md="3" offset-md="3">
+            <b-button block class="mt-3" variant="danger" @click="cancel()">
+              No
+            </b-button>
+          </b-col>
+          <b-col md="3">
+            <b-button block class="mt-3" variant="success" @click="saveDelete()">
+              Yes
+            </b-button>
           </b-col>
         </b-row>
       </div>
@@ -113,8 +149,6 @@
               hover
               show-empty
               :empty-text="emptySearchText"
-              class="select-row"
-              @row-clicked="addStudentToPeriod"
             >
               <template v-slot:cell(actions)="data">
                 <div>
@@ -139,8 +173,6 @@
               small
               show-empty
               :empty-text="emptyPeriodStudentsText"
-              class="select-row"
-              @row-clicked="removeStudentFromPeriod"
             >
               <template v-slot:cell(actions)="data">
                 <div>
@@ -182,11 +214,11 @@
         <b-row>
           <b-col md="8" offset-md="2">
             <strong>Select the file you want to upload</strong><br>
-            It must be a csv with each row in the following format (you may include additional fields if desired; they will be ignored):<br>
+            It must be a csv with each row in the following format: <br>
             <code>
-              student_id<br>
-              &lt;student_id&gt;<br>
-              &lt;student_id&gt;<br>
+              student_id,first_name,last_name<br>
+              &lt;student_id&gt;,&lt;first_name&gt;,&lt;last_name&gt;<br>
+              &lt;student_id&gt;,&lt;first_name&gt;,&lt;last_name&gt;<br>
               ...
             </code>
           </b-col>
@@ -248,6 +280,13 @@ export default {
         students: null
       },
       fields: [
+        {
+          key: 'actions',
+          label: '',
+          sortable: false,
+          tdClass: 'action-column',
+          thStyle: 'width:90px'
+        },
         {
           key: 'periodName',
           label: 'Name',
@@ -331,6 +370,9 @@ export default {
     isStudentMode () {
       return this.mode === 'student'
     },
+    isDeleteMode () {
+      return this.mode === 'delete'
+    },
     searchResultDisplay () {
       let stu = []
       if (this.searchResults != null && this.searchResults.length > 0) {
@@ -361,6 +403,7 @@ export default {
         isActive: null,
         students: null
       }
+      this.loadList()
       this.mode = 'list'
     },
     async search () {
@@ -381,6 +424,10 @@ export default {
         .then((response) => {
           this.period.students = response.data
         })
+    },
+    deactivatePeriod (item) {
+      this.mode = 'delete'
+      this.period = item
     },
     upload () {
       this.mode = 'upload'
@@ -426,6 +473,14 @@ export default {
         }
       }
     },
+    async saveDelete () {
+      const url = `/api/admin/timePeriod/${this.period.id}/deactivate`
+      await this.$axios.post(url)
+        .then((response) => {
+          this.cancel()
+          this.loadList()
+        })
+    },
     async doSave () {
       const url = '/api/admin/timePeriod/'
       await this.$axios.post(url, this.period)
@@ -456,6 +511,13 @@ export default {
         this.fetchStudents()
       })
     },
+    async deactivateTimePeriod (item) {
+      const url = `/api/admin/timeperiod/${this.period.id}/deactivate`
+      await this.$axios.post(url).then(() => {
+        this.laodList()
+        this.mode = 'list'
+      })
+    },
     async doUpload (env) {
       env.preventDefault()
       this.results = null
@@ -477,7 +539,7 @@ export default {
             if (response.data.success === true) {
               this.showSuccess('Saved', `Students ${this.uploadType === 'add' ? 'added' : 'replaced'}.`)
               this.fetchStudents()
-              this.mode = 'edit'
+              this.mode = 'student'
             }
             else {
               this.showError('Error', response.data.failMessages)

@@ -26,7 +26,7 @@ create table admin.user(
 );
 create table lookup.time_period (
   id serial primary key,
-  period_name text not null unique,
+  period_name text not null,
   is_active boolean not null default true,
 	date_created timestamp with time zone not null default CURRENT_TIMESTAMP,
 	last_updated timestamp with time zone not null default CURRENT_TIMESTAMP
