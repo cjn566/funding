@@ -26,11 +26,12 @@ display(blue, dur = 1)
 while True:
   isGood = False
   id = input("Student ID: ")
-  display(blue)
   try:
-    r = requests.get('http://127.0.0.1:3000/api/student/' + str(id))
-    isGood = (r.text == "true")
-    display(green if isGood else red, dur = 0.5)
+    # r = requests.get('http://127.0.0.1:3000/api/student/' + str(id))
+    #isGood = (r.text == "true")
+    isGood = id == 402954901
+
+    display(green if isGood else red, dur = 3)
   except ValueError:
     display(yellow, dur=3)
 
