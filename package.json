@@ -2,7 +2,7 @@
   "name": "keycard-access",
   "version": "0.1.0",
   "description": "Keycard Access",
-  "author": "cdigg",
+  "author": "Etibyte",
   "private": false,
   "scripts": {
     "debug": "cross-env NODE_ENV=development nodemon --inspect --exec babel-node server/index.js --watch server",
