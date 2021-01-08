@@ -1,17 +1,14 @@
 import unicornhat as corn
-
+import sys
 import time
 import requests
+from threading import Timer
 
 red = (100,0,0)
 green = (0,100,0)
 purple = (100,0, 100)
-yellow = (0,100, 100)
+yellow = (100,100, 0)
 blue = (0,0, 100)
-
-def checkid(id):
-  r = requests.get('http://127.0.0.1:3000/api/student/' + str(id))
-  print(r.text)
 
 def display(color, dur = 0):
   corn.set_all(color)
@@ -24,14 +21,21 @@ def display(color, dur = 0):
 display(blue, dur = 1)
 
 while True:
-  isGood = False
-  id = input("Student ID: ")
   try:
-    # r = requests.get('http://127.0.0.1:3000/api/student/' + str(id))
-    #isGood = (r.text == "true")
-    isGood = id == 402954901
-
-    display(green if isGood else red, dur = 3)
-  except ValueError:
-    display(yellow, dur=3)
+    id = raw_input("Student ID: ")
+    r = requests.get('http://127.0.0.1:3000/api/student/' + id)
+    display(green if (r.text == "true") else red, dur = 4)
+  except TypeError:
+    print("Type Error: ", sys.exc_info()[0])
+    display(yellow, dur = 2)
+  except requests.ConnectionError:
+    print("Connection Error: ", sys.exc_info()[0])
+    display(yellow, dur = 2)
+  except KeyboardInterrupt:
+    print("Exiting.")
+    display(red, dur = 0.3)
+    exit()
+  except:
+    print("Unexpected Error: ", sys.exc_info()[0])
+    display(yellow, dur = 2)
 

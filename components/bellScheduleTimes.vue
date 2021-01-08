@@ -1,8 +1,26 @@
 <template>
   <div>
-    <b-input v-model="formattedStart" class="time" placeholder="ex: 9:15 AM" :state="isValidTime(start)" />
-    <b-input v-model="formattedEnd" class="time" placeholder="ex: 1:00 PM" :state="isValidTime(end)" />
-    <b-btn style="font-size: .6em; width:100px;" size="sm" variant="outline-danger" @click="clear()">
+    <b-form-timepicker
+      v-model="start"
+      placeholder="start"
+      dropup
+      size="sm"
+      :no-close-button="true"
+      :state="valid"
+      @shown="startShown"
+      @hidden="timeChanged"
+    />
+    <b-form-timepicker
+      v-model="end"
+      placeholder="end"
+      size="sm"
+      :no-close-button="true"
+      :disabled="start === null"
+      :state="valid"
+      @shown="endShown"
+      @hidden="timeChanged"
+    />
+    <b-btn v-if="start !== null || end !== null" style="font-size: .6em; width:100px;" size="sm" variant="outline-danger" @click="clear()">
       Clear
     </b-btn>
   </div>
@@ -25,25 +43,23 @@ export default {
   data () {
     return {
       start: null,
-      end: null,
-      timePattern: /^([0-1]?\d):(\d\d) (AM|PM)$/
+      end: null
     }
   },
   computed: {
-    formattedStart: {
-      get () {
-        return this.formatted('start')
-      },
-      set (val) {
-        this.format('start', val.toUpperCase())
+    valid () {
+      if (this.start !== null && this.end !== null) {
+        const start = DateTime.fromFormat(this.start, 'HH:mm:ss')
+        const end = DateTime.fromFormat(this.end, 'HH:mm:ss')
+        if (start < end) {
+          return true
+        }
+        else {
+          return false
+        }
       }
-    },
-    formattedEnd: {
-      get () {
-        return this.formatted('end')
-      },
-      set (val) {
-        this.format('end', val.toUpperCase())
+      else {
+        return null
       }
     }
   },
@@ -64,59 +80,38 @@ export default {
     if (this.timeSlot) {
       const startTime = DateTime.fromISO(this.timeSlot.startTime)
       if (startTime.isValid) {
-        this.start = startTime.toLocaleString(DateTime.TIME_SIMPLE)
+        this.start = startTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
       }
       const endTime = DateTime.fromISO(this.timeSlot.endTime)
       if (endTime.isValid) {
-        this.end = endTime.toLocaleString(DateTime.TIME_SIMPLE)
+        this.end = endTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
       }
     }
   },
   methods: {
-    formatted (prop) {
-      const item = this[prop]
-      if (item == null || item.length === 0) {
-        return ''
-      }
-      else {
-        return this[prop]
-      }
-    },
-    format (prop, val) {
-      this[prop] = val
-      if (this.isValidTime(val)) {
-        const res = val.toUpperCase().match(this.timePattern)
-        let hr = parseInt(res[1])
-        // eslint-disable-next-line eqeqeq
-        if (res[3] == 'PM') {
-          hr += 12
-        }
-        const min = parseInt(res[2])
-
-        let localTime = DateTime.local()
-        localTime = localTime.set({ hour: hr, minute: min })
-
-        if (prop === 'start') {
-          this.timeSlot.startTime = localTime.toLocaleString(DateTime.TIME_24_SIMPLE)
-        }
-        if (prop === 'end') {
-          this.timeSlot.endTime = localTime.toLocaleString(DateTime.TIME_24_SIMPLE)
-        }
-
-        // if both start and end times are valid, update the ball schedule
-        if (this.isValidTime(this.start) && this.isValidTime(this.end)) {
-          this.$emit('timeChange', this.timeSlot)
-        }
-      }
-    },
     clear () {
       this.$emit('clear', this.timeSlot)
       this.start = null
       this.end = null
     },
-    isValidTime (val) {
-      const valid = val && this.timePattern.test(val)
-      return valid
+    startShown () {
+      if (this.start == null) {
+        this.start = '08:00:10'
+      }
+    },
+    endShown () {
+      if (this.end == null) {
+        const start = DateTime.fromFormat(this.start, 'HH:mm:ss')
+        const newEnd = start.plus({ hours: 1 })
+        this.end = newEnd.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+      }
+    },
+    timeChanged () {
+      if (this.valid) {
+        this.timeSlot.startTime = this.start
+        this.timeSlot.endTime = this.end
+        this.$emit('timeChange', this.timeSlot)
+      }
     }
   }
 }
