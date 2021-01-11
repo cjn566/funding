@@ -135,3 +135,8 @@ hr.review-separator {
 .action-column {
   max-width: 20px;
 }
+
+.no-validation-icons .form-control.is-valid, .no-validation-icons .form-control.is-invalid {
+  background:none;
+  padding-right: inherit;
+ }

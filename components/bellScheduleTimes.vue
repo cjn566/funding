@@ -2,6 +2,7 @@
   <div>
     <b-form-timepicker
       v-model="start"
+      class="no-validation-icons"
       placeholder="start"
       dropup
       size="sm"
@@ -12,6 +13,7 @@
     />
     <b-form-timepicker
       v-model="end"
+      class="no-validation-icons"
       placeholder="end"
       size="sm"
       :no-close-button="true"
@@ -20,7 +22,7 @@
       @shown="endShown"
       @hidden="timeChanged"
     />
-    <b-btn v-if="start !== null || end !== null" style="font-size: .6em; width:100px;" size="sm" variant="outline-danger" @click="clear()">
+    <b-btn v-if="start !== null || end !== null" style="font-size: .6em; width:100%;" size="sm" variant="outline-danger" @click="clear()">
       Clear
     </b-btn>
   </div>
