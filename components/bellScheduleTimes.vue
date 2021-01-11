@@ -56,8 +56,11 @@ export default {
         if (start < end) {
           return true
         }
+        else {
+          return false
+        }
       }
-      return false
+      return null
     },
     canClear () {
       return this.start != null || this.end != null
