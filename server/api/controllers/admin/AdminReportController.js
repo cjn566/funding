@@ -29,7 +29,8 @@ class AdminReportController {
           studentId: x.student_key,
           student: x.last_name == null ? null : (x.last_name + ', ' + x.first_name),
           success: x.success,
-          dateTime: x.date_created
+          dateTime: x.date_created,
+          flagged: x.flagged
         }
       })
       res.status(200).json(data)
@@ -54,7 +55,8 @@ class AdminReportController {
           studentId: x.student_key,
           student: x.last_name == null ? null : (x.last_name + ', ' + x.first_name),
           success: x.success,
-          dateTime: x.date_created
+          dateTime: x.date_created,
+          flagged: x.flagged
         }
       })
       res.status(200).json(data)
@@ -81,7 +83,8 @@ class AdminReportController {
             student_id: x.student_key,
             name: x.last_name == null ? 'No Match' : (x.last_name + ', ' + x.first_name),
             access_granted: x.success ? 'Yes' : 'No',
-            scanned_date_time: x.date_created.toLocaleString(DateTime.DATETIME_SHORT)
+            scanned_date_time: x.date_created.toLocaleString(DateTime.DATETIME_SHORT),
+            flagged: x.flagged
           }
         })
 

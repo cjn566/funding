@@ -68,7 +68,7 @@ export default {
         const ret = await this.$auth.loginWith('local', { data: this.login })
         if (ret.data.success === true) {
           this.$auth.setUser({ email: this.login.email })
-          this.$router.push('/admin/periods')
+          this.$router.push('/admin/reports')
         }
         else {
           this.$bvToast.toast('Invalid credentials', {

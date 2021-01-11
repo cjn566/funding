@@ -56,13 +56,11 @@ export default {
         if (start < end) {
           return true
         }
-        else {
-          return false
-        }
       }
-      else {
-        return null
-      }
+      return false
+    },
+    canClear () {
+      return this.start != null || this.end != null
     }
   },
   watch: {

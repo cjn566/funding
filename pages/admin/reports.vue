@@ -19,6 +19,7 @@
                 :sort-by.sync="sortBy"
                 :sort-desc.sync="sortDesc"
                 :tbody-tr-class="rowClass"
+                :fields="fields"
               >
                 <template v-slot:head(success)="data">
                   <div class="text-center">
@@ -31,6 +32,12 @@
                   </div>
                 </template>
 
+                <template v-slot:cell(flagged)="data">
+                  <b-icon v-if="data.item.flagged" font-scale="1.5" class="text-warning" icon="exclamation-triangle-fill" />
+                </template>
+                <template v-slot:cell(studentId)="data">
+                  {{ data.value }}
+                </template>
                 <template v-slot:cell(student)="data">
                   <div v-if="data.value">
                     {{ data.value }}
@@ -116,6 +123,8 @@
                     :sort-by.sync="sortBy"
                     :sort-desc.sync="sortDesc"
                     show-empty
+                    :tbody-tr-class="rowClass"
+                    :fields="fields"
                   >
                     <template v-slot:head(success)="data">
                       <div class="text-center">
@@ -128,6 +137,9 @@
                       </div>
                     </template>
 
+                    <template v-slot:cell(flagged)="data">
+                      <b-icon v-if="data.item.flagged" font-scale="1.5" class="text-warning" icon="exclamation-triangle-fill" />
+                    </template>
                     <template v-slot:cell(student)="data">
                       <div v-if="data.value">
                         {{ data.value }}
@@ -183,7 +195,35 @@ export default {
         endDate: null,
         endTime: null
       },
-      dateFormatOptions: { year: 'numeric', month: 'numeric', day: 'numeric' }
+      dateFormatOptions: { year: 'numeric', month: 'numeric', day: 'numeric' },
+      fields: [
+        {
+          key: 'flagged',
+          label: '',
+          sortable: false,
+          thStyle: 'width:45px'
+        },
+        {
+          key: 'studentId',
+          label: 'Student ID',
+          sortable: false
+        },
+        {
+          key: 'student',
+          label: 'Student',
+          sortable: false
+        },
+        {
+          key: 'success',
+          label: 'Success',
+          sortable: false
+        },
+        {
+          key: 'dateTime',
+          label: 'Date Time',
+          sortable: false
+        }
+      ]
     }
   },
   computed: {
@@ -202,7 +242,7 @@ export default {
   },
   methods: {
     rowClass (item, type) {
-      return item.success ? 'text-success' : 'text-danger'
+      return item && item.success ? 'text-success' : 'text-danger'
     },
     dirtyDate () {
       this.dateChanged = true

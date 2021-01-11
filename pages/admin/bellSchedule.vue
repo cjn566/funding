@@ -167,6 +167,7 @@ export default {
       this.$axios.post(url, timeSlot).then((resp) => {
         const perName = this.bellSchedules.filter(x => x.id === timeSlot.periodId)[0].name
         this.showSuccess('Saved', `${perName} ${timeSlot.dayOfWeek} cleared`)
+        this.getData()
       })
     }
   }
