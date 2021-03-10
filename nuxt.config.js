@@ -82,6 +82,11 @@ module.exports = {
     bootstrapVueCSS: false,
     icons: true
   },
+
+  server: {
+    port: 3001
+  },
+
   serverMiddleware: [
     '~/server/api-middleware.js'
   ],

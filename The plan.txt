@@ -1,0 +1,37 @@
+
+
+Each node either has it's own cost range, or sums it's children's minimum and maximum costs
+
+Can have options?
+
+
+purchase node DB representation:
+  id: int
+  parentId: int
+  description: text
+  isFolder: Boolean (or compute based on having children?)
+  min cost: dollars
+  max cost: dollars (optional)
+  order: int
+
+node in JS rep:
+  id: int
+  description: text
+  isFolder: Boolean (or compute based on having children?)
+  min cost: dollars
+  max cost: dollars (optional)
+  order: int
+  isOpen: Boolean
+  makeFolder()
+  toggle()
+
+
+node in UI:
+  - is nested under parentId
+  - is in the correct order
+  - can expand / collapse
+  - edit description
+  - edit min / max cost
+  - make into folder (will create a child with same cost range)
+  - reorder
+
