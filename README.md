@@ -1,5 +1,5 @@
-# KeyCardAccess
-Simple tracking of school ids against a timeframe based database for library access.
+# Funding
+A simple tool to track the cost of things by summing their component costs.
 
 You will need to set up a .env file with:
 

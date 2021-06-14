@@ -3,25 +3,14 @@
 @import '~bootstrap/scss/bootstrap.scss';
 @import '~bootstrap-vue/src/index.scss';
 
-.nav-pills .nav-link{
-  color: $color-dark-blue;
-  font-weight:bold;
+.cost-item {
+  cursor:pointer;
+  padding-left: 40px;
+  padding-top: 10px;
 }
 
-.nav-pills .nav-link.active {
-  background-color: #36A2B9
-}
-
-.page-header{
-  background-color: $color-dark-blue;
-  color: #D5D8DC;
-  padding: 20px;
-  border-radius:5px;
-  margin-bottom:40px;
-}
-
-.menu-sidebar .menu-active a {
-  color: $color-yellow
+.sum-costs {
+  font-weight: bold;
 }
 
 .table.no-header-bottom-border thead th {
@@ -63,73 +52,6 @@ hr.grey-line {
 }
 hr.review-separator {
   border-top: 3px solid #777;
-}
-
-.menu-sidebar {
-  background: $color-dark-blue;
-  height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 100;
-  font-weight: 600;
-}
-
- .menu-sidebar .logo {
-  max-height: 40px;
-  margin: 40px 0 40px 20px;
-}
-
-.menu-sidebar a {
-  color: #fff;
-  text-decoration: none;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
-.menu-sidebar a .b-icon {
-  font-size: 20px;
-  margin-left: 20px;
-  margin-right: 20px;
-}
-
-.menu-sidebar .children {
-  background-color: $color-light-blue;
-}
-.menu-sidebar .children a {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  font-size: 14px;
-}
-.menu-sidebar .children a:hover {
-  background: $color-accent-blue;
-}
-
-.student-drag {
-  cursor:pointer;
-  :hover {
-    color: #36A2B9;
-  }
-}
-
-.time-period {
-  background-color: #bbb;
-  border: 1px solid #888;
-  padding: 8px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-
-}
-
-.period-student {
-  margin-bottom: 10px;
-}
-
-.time {
-  text-align: right;
-  font-size: .8em;
-  width: 100px;
-  margin-bottom:2px;
 }
 
 .action-column {

@@ -13,6 +13,7 @@ purchase node DB representation:
   min cost: dollars
   max cost: dollars (optional)
   order: int
+  isOpen: Boolean (?)
 
 node in JS rep:
   id: int

@@ -6,11 +6,11 @@ module.exports = {
   ** Headers of the page
   */
   head: {
-    title: 'Keycard Student Access',
+    title: 'Funding',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: 'Keycard Student Access' }
+      { hid: 'description', name: 'description', content: 'Funding' }
     ]
   },
   /*
@@ -44,9 +44,7 @@ module.exports = {
     // Doc: https://bootstrap-vue.js.org
     'bootstrap-vue/nuxt',
     // Doc: https://axios.nuxtjs.org
-    '@nuxtjs/axios',
-    // Doc: https://auth.nuxtjs.org
-    '@nuxtjs/auth-next'
+    '@nuxtjs/axios'
   ],
   /*
   ** Axios module configuration
@@ -59,23 +57,6 @@ module.exports = {
   ** Auth module configuration
   ** See https://auth.nuxtjs.org
   */
-  auth: {
-    strategies: {
-      local: {
-        token: {
-          property: 'token'
-        },
-        user: {
-          autoFetch: false
-        },
-        endpoints: {
-          login: { url: '/api/auth/login', method: 'post' },
-          logout: false,
-          user: false
-        }
-      }
-    }
-  },
 
   bootstrapVue: {
     bootstrapCSS: false,
@@ -103,8 +84,5 @@ module.exports = {
       }
     }
   },
-  telemetry: false,
-  router: {
-    middleware: ['auth']
-  }
+  telemetry: false
 }
