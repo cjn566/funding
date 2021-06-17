@@ -3,15 +3,54 @@
 @import '~bootstrap/scss/bootstrap.scss';
 @import '~bootstrap-vue/src/index.scss';
 
-.cost-item {
+.cost-item-full {
   cursor:pointer;
   padding-left: 40px;
   padding-top: 10px;
 }
 
+.make-folder-icon {
+  display: none;
+}
+
+.cost-item-row {
+  border-radius: 4px;
+
+  &:hover {
+    background-color:gainsboro;
+
+    .make-folder-icon {
+      display: inline;
+    }
+  }
+
+  &:focus {
+    //background-color:lightgoldenrodyellow;
+  }
+}
+
+.collapse-icons-spacer {
+  padding-left: 8px;
+  float: left;
+  min-width: 30px;
+}
+
+.cost-range-spacer {
+  float: left;
+  min-width: 100px;
+}
+
 .sum-costs {
   font-weight: bold;
 }
+
+
+
+
+
+
+
+
 
 .table.no-header-bottom-border thead th {
   border-bottom: none

@@ -93,7 +93,7 @@ export default {
     },
     updateItem (key, value) {
       this.$store.commit('updateItem', {
-        id: this.item.id, key, value
+        id: this.item.id, key, value, path: this.item.path
       })
       this.takeFocus()
     },
@@ -170,7 +170,15 @@ export default {
         }
         break
       case 'Tab':
-        if (shift) {
+        if (this.$refs.text.editing) {
+          this.$refs.text.saveEdit()
+          this.$refs.costs.enableEditing()
+        }
+        else if (this.$refs.costs.editing) {
+          this.$refs.costs.saveEdit()
+          this.$refs.text.enableEditing()
+        }
+        else if (shift) {
           this.$store.commit('relocateItem', { id: this.item.id, action: 'out' })
         }
         else {

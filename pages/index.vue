@@ -1,5 +1,5 @@
 <template>
-  <div @keydown="keyCheck">
+  <div>
     <cost-item
       v-for="(child, index) in treeData.children"
       :key="index"
@@ -15,25 +15,37 @@ import Vuex from 'vuex'
 import CostItem from '@/components/costItem'
 Vue.use(Vuex)
 
-function searchTree (item, id) {
+function searchTree (root, path, id) {
+  let item = root
+  for (let i = 1; i < path.length; i++) {
+    item = item.children[path[i]]
+  }
   if (item.id === id) {
     return item
   }
-  else if (item.children != null) {
-    let i
-    let result = null
-    for (i = 0; result == null && i < item.children.length; i++) {
-      result = searchTree(item.children[i], id)
-    }
-    return result
+  else {
+    alert('wrong item')
+    return null
   }
-  return null
+  //   return item
+  // }
+  // else if (item.children != null) {
+  //   let i
+  //   let result = null
+  //   for (i = 0; result == null && i < item.children.length; i++) {
+  //     result = searchTree(item.children[i], id)
+  //   }
+  //   return result
+  // }
+  // return null
 }
 
-function buildSums (item) {
+function buildTree (item, path, idx) {
+  path.push(idx)
+  item.path = path
   if (item.children?.length > 0) {
-    item.children = item.children.map((child) => {
-      return buildSums(child)
+    item.children = item.children.map((child, idx) => {
+      return buildTree(child, [...path], idx)
     })
     item.minSum = item.children.reduce((sum, child) => {
       return sum + child.minSum
@@ -56,19 +68,19 @@ const store = new Vuex.Store({
   },
   mutations: {
     setItems (state, payload) {
-      state.treeData = buildSums(payload.items)
+      state.treeData = buildTree(payload.items, [], 0)
     },
     updateItem (state, payload) {
-      searchTree(state.treeData, payload.id)[payload.key] = payload.value
+      searchTree(state.treeData, payload.path, payload.id)[payload.key] = payload.value
       if (payload.key === 'min_cost' || payload.key === 'max_cost') {
-        state.treeData = buildSums(state.treeData)
+        state.treeData = buildTree(state.treeData, [], 0)
       }
     },
     // setFocus (state, payload) {
     //   state.focus = payload.id
     // },
     relocateItem (state, payload) {
-      const item = searchTree(state.treeData, state.focus)
+      // const item = searchTree(state.treeData, state.focus)
       switch (payload.action) {
       case 'up':
         break
