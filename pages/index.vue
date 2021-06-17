@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @keydown="keyCheck">
     <cost-item
       v-for="(child, index) in treeData.children"
       :key="index"
@@ -51,7 +51,8 @@ function buildSums (item) {
 
 const store = new Vuex.Store({
   state: {
-    treeData: {}
+    treeData: {},
+    focus: null
   },
   mutations: {
     setItems (state, payload) {
@@ -61,6 +62,22 @@ const store = new Vuex.Store({
       searchTree(state.treeData, payload.id)[payload.key] = payload.value
       if (payload.key === 'min_cost' || payload.key === 'max_cost') {
         state.treeData = buildSums(state.treeData)
+      }
+    },
+    // setFocus (state, payload) {
+    //   state.focus = payload.id
+    // },
+    relocateItem (state, payload) {
+      const item = searchTree(state.treeData, state.focus)
+      switch (payload.action) {
+      case 'up':
+        break
+      case 'down':
+        break
+      case 'in':
+        break
+      case 'out':
+        break
       }
     },
     makeFolder (state, payload) {
