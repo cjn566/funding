@@ -1,11 +1,6 @@
 <template>
   <div>
-    <cost-item
-      v-for="(child, index) in treeData.children"
-      :key="index"
-      class="cost-item"
-      :item="child"
-    />
+    <cost-item :item="treeData" :root="true" />
   </div>
 </template>
 
@@ -15,50 +10,51 @@ import Vuex from 'vuex'
 import CostItem from '@/components/costItem'
 Vue.use(Vuex)
 
-function searchTree (root, path, id) {
+function searchTree (root, path) {
   let item = root
-  for (let i = 1; i < path.length; i++) {
+  for (let i = 0; i < path.length; i++) {
     item = item.children[path[i]]
   }
-  if (item.id === id) {
-    return item
-  }
-  else {
-    alert('wrong item')
-    return null
-  }
-  //   return item
-  // }
-  // else if (item.children != null) {
-  //   let i
-  //   let result = null
-  //   for (i = 0; result == null && i < item.children.length; i++) {
-  //     result = searchTree(item.children[i], id)
-  //   }
-  //   return result
-  // }
-  // return null
+  return item
 }
 
 function buildTree (item, path, idx) {
-  path.push(idx)
+  if (idx >= 0) {
+    path.push(idx)
+  }
   item.path = path
   if (item.children?.length > 0) {
     item.children = item.children.map((child, idx) => {
       return buildTree(child, [...path], idx)
     })
-    item.minSum = item.children.reduce((sum, child) => {
-      return sum + child.minSum
+    item.min_cost = item.children.reduce((sum, child) => {
+      return sum + child.min_cost
     }, 0)
-    item.maxSum = item.children.reduce((sum, child) => {
-      return sum + child.maxSum
+    item.max_cost = item.children.reduce((sum, child) => {
+      return sum + child.max_cost
     }, 0)
-  }
-  else {
-    item.minSum = item.min_cost
-    item.maxSum = item.max_cost
   }
   return item
+}
+
+function recalcSums (root, path) {
+  const items = []
+  items.push(root)
+  let item
+  for (let i = 0; i < path.length - 1; i++) {
+    item = items[i]
+    items.push(item.children[path[i]])
+  }
+  for (let i = items.length - 1; i > 0; i--) {
+    item = items[i]
+    item.min_cost = item.children.reduce((sum, child) => {
+      return sum + child.min_cost
+    }, 0)
+    item.max_cost = item.children.reduce((sum, child) => {
+      return sum + child.max_cost
+    }, 0)
+  }
+  return items[0]
 }
 
 const store = new Vuex.Store({
@@ -68,12 +64,17 @@ const store = new Vuex.Store({
   },
   mutations: {
     setItems (state, payload) {
-      state.treeData = buildTree(payload.items, [], 0)
+      state.treeData = buildTree(payload.items, [], -1)
     },
     updateItem (state, payload) {
-      searchTree(state.treeData, payload.path, payload.id)[payload.key] = payload.value
-      if (payload.key === 'min_cost' || payload.key === 'max_cost') {
-        state.treeData = buildTree(state.treeData, [], 0)
+      const item = searchTree(state.treeData, payload.path)
+      if (payload.key === 'costs') {
+        item.min_cost = payload.value.min
+        item.max_cost = payload.value.max
+        state.treeData = recalcSums(state.treeData, payload.path)
+      }
+      else {
+        item[payload.key] = payload.value
       }
     },
     // setFocus (state, payload) {

@@ -8,31 +8,49 @@
     >
       <span class="collapse-icons-spacer">
         <span v-if="isFolder">
-          <img v-if="!isOpen" src="@/assets/icons/next-10.svg" alt="collapse" height="10px" @click="toggle">
-          <img v-else src="@/assets/icons/download-12.svg" alt="expand" height="10px" @click="toggle">
+          <img v-if="!isOpen" src="@/assets/icons/next-10.svg" alt="collapse" height="10px" @click="toggleCollapse">
+          <img v-else src="@/assets/icons/download-12.svg" alt="expand" height="10px" @click="toggleCollapse">
         </span>
         <span v-else class="make-folder-icon" @click="makeFolder">
           <img src="@/assets/icons/more-1.svg" alt="expand" height="15px" @click="makeFolder">
         </span>
       </span>
       <span class="cost-range-spacer">
-        <span v-if="isFolder" class="sum-costs">${{ item.minSum }} - {{ item.maxSum }}</span>
+        <span v-if="isFolder" class="sum-costs">${{ costString }}</span>
         <span v-else>
-          <editable-costs
-            ref="costs"
-            :min="item.min_cost"
-            :max="item.max_cost"
-            @update-min="updateItem('min_cost', $event)"
-            @update-max="updateItem('max_cost', $event)"
-          />
+
+          <div style="display: inline-block">
+            <div v-show="editing !== 'costs'">
+              <span class="text" @click="enableEditing('costs')">${{ costString }}</span>
+            </div>
+            <div v-show="editing === 'costs'">
+              <b-form-input
+                ref="costsText"
+                v-model="tempValue"
+                @focus="enableEditing('costs')"
+                @blur="saveEdit(true)"
+              />
+            </div>
+          </div>
+
         </span>
       </span>
-      <editable-text
-        ref="text"
-        :text="item.name"
-        @update-text="updateItem('name', $event)"
-      />
+
+      <div style="display: inline-block">
+        <div v-show="editing !== 'text'">
+          <span class="text" @click="enableEditing('text')">{{ item.name }}</span>
+        </div>
+        <div v-show="editing === 'text'">
+          <b-form-input
+            ref="text"
+            v-model="tempValue"
+            @focus="enableEditing('text')"
+            @blur="saveEdit(true)"
+          />
+        </div>
+      </div>
     </b-row>
+
     <b-collapse id="collapse-1" v-model="isOpen" class="cost-item-full">
       <cost-item
         v-for="(child, index) in item.children"
@@ -46,12 +64,9 @@
 </template>
 
 <script>
-import EditableText from '@/components/editableText'
-import EditableCosts from '@/components/editableCosts'
 
 export default {
   name: 'CostItem',
-  components: { EditableText, EditableCosts },
   props: {
     item: {
       type: Object,
@@ -60,25 +75,112 @@ export default {
           id: null,
           name: 'untitled',
           min_cost: 0,
-          max_cost: 0,
-          minSum: 0,
-          maxSum: 0
+          max_cost: 0
         }
       }
+    },
+    root: {
+      type: Boolean,
+      default () { return false }
     }
   },
   data () {
     return {
-      isOpen: false
+      isOpen: false,
+      editing: null,
+      editables: ['costs', 'text'],
+      tempValue: ''
     }
   },
   computed: {
     isFolder () {
       return this.item.children && this.item.children.length
+    },
+    costString () {
+      return '' +
+      (this.item.min_cost == null ? '0' : this.item.min_cost) +
+      ((this.item.max_cost === this.item.min_cost || this.item.max_cost === null) ? '' : (' - ' + this.item.max_cost))
     }
   },
   methods: {
-    toggle () {
+    selectAllCosts () {
+      this.$refs.costsText.focus()
+      this.$refs.costsText.select()
+    },
+    selectAllText () {
+      this.$refs.text.focus()
+      this.$refs.text.select()
+    },
+    enableEditing (which) {
+      this.editing = which
+      switch (which) {
+      case 'costs':
+        this.tempValue = this.costString
+        this.$nextTick(() => {
+          this.selectAllCosts()
+        })
+        break
+      case 'text':
+        this.tempValue = this.item.name
+        this.$nextTick(() => {
+          this.selectAllText()
+        })
+      }
+    },
+    cycleEdit (reverse) {
+      const curEditIdx = this.editables.indexOf(this.editing)
+      let newEdit = this.editables[(curEditIdx + (reverse ? 1 : 1)) % this.editables.length]
+      if (this.isFolder && newEdit === 'costs') {
+        newEdit = this.editables[(curEditIdx + (reverse ? 2 : 2)) % this.editables.length]
+      }
+      this.enableEditing(newEdit)
+    },
+    disableEditing () {
+      this.tempValue = null
+      this.editing = null
+    },
+    saveCosts () {
+      const regexp = /((\d*\.?\d+))/g
+      const array = this.tempValue.match(regexp)
+      let min = null
+      let max = null
+      if (array?.length > 0) {
+        const first = parseFloat(array[0])
+        const second = parseFloat(array[1])
+        if (!isNaN(first)) {
+          min = first
+          if (!isNaN(second)) {
+            if (first < second) {
+              max = second
+            }
+            else {
+              min = second
+              max = first
+            }
+          }
+          else {
+            max = first
+          }
+        }
+      }
+      this.updateItem('costs', { min, max })
+    },
+    saveEdit (andClose) {
+      switch (this.editing) {
+      case 'costs':
+        this.saveCosts()
+        break
+      case 'text':
+        this.updateItem('name', this.tempValue)
+        break
+      default:
+        break
+      }
+      if (andClose) {
+        this.disableEditing()
+      }
+    },
+    toggleCollapse () {
       if (this.isFolder) {
         this.isOpen = !this.isOpen
       }
@@ -133,73 +235,88 @@ export default {
         break
       }
     },
+
     keyCheck (event) {
       const shift = event.getModifierState('Shift')
       const ctrl = event.getModifierState('Control')
-      switch (event.key) {
-      case 'ArrowUp':
-        if (!ctrl) {
+
+      if (this.editing != null) {
+        switch (event.key) {
+        case 'Enter':
+          this.saveEdit(true)
+          break
+        case 'Tab':
+          this.cycleEdit(shift)
+          event.preventDefault()
+          break
+        case 'ArrowUp':
+          this.saveEdit(true)
           this.$emit('focus-change', 'up')
+          break
+        case 'ArrowDown':
+          this.saveEdit(true)
+          this.$emit('focus-change', 'down')
+          break
         }
-        else {
-          this.$store.commit('relocateItem', { id: this.item.id, action: 'up' })
-        }
-        break
-      case 'ArrowDown':
-        if (!ctrl) {
-          if (this.isFolder && this.isOpen) {
-            this.$refs.childRefs[0].takeFocus()
+      }
+      else {
+        switch (event.key) {
+        case 'ArrowUp':
+          if (!ctrl) {
+            this.$emit('focus-change', 'up')
           }
           else {
-            this.$emit('focus-change', 'down')
+            this.$store.commit('relocateItem', { id: this.item.id, action: 'up' })
           }
+          break
+        case 'ArrowDown':
+          if (!ctrl) {
+            if (this.isFolder && this.isOpen) {
+              this.$refs.childRefs[0].takeFocus()
+            }
+            else {
+              this.$emit('focus-change', 'down')
+            }
+          }
+          else {
+            this.$store.commit('relocateItem', { id: this.item.id, action: 'down' })
+          }
+          break
+        case 'ArrowLeft':
+          if (this.isFolder) {
+            this.isOpen = false
+          }
+          event.preventDefault()
+          break
+        case 'ArrowRight':
+          if (this.isFolder) {
+            this.isOpen = true
+          }
+          break
+        case 'Tab':
+          if (shift) {
+            this.$store.commit('relocateItem', { id: this.item.id, action: 'out' })
+          }
+          else {
+            this.$store.commit('relocateItem', { id: this.item.id, action: 'in' })
+          }
+          event.preventDefault()
+          break
+        case 'e':
+          this.enableEditing('text')
+          event.preventDefault()
+          break
+        case 'c':
+          this.enableEditing('costs')
+          event.preventDefault()
+          break
+        case 'Delete':
+          break
+        case 'Space':
+          break
+        default:
+          break
         }
-        else {
-          this.$store.commit('relocateItem', { id: this.item.id, action: 'down' })
-        }
-        break
-      case 'ArrowLeft':
-        if (this.isFolder) {
-          this.isOpen = false
-        }
-        event.preventDefault()
-        break
-      case 'ArrowRight':
-        if (this.isFolder) {
-          this.isOpen = true
-        }
-        break
-      case 'Tab':
-        if (this.$refs.text.editing) {
-          this.$refs.text.saveEdit()
-          this.$refs.costs.enableEditing()
-        }
-        else if (this.$refs.costs.editing) {
-          this.$refs.costs.saveEdit()
-          this.$refs.text.enableEditing()
-        }
-        else if (shift) {
-          this.$store.commit('relocateItem', { id: this.item.id, action: 'out' })
-        }
-        else {
-          this.$store.commit('relocateItem', { id: this.item.id, action: 'in' })
-        }
-        event.preventDefault()
-        break
-      case 'e':
-        this.$refs.text.enableEditing()
-        event.preventDefault()
-        break
-      case 'c':
-        this.$refs.costs.enableEditing()
-        event.preventDefault()
-        break
-      case 'Delete':
-        break
-      case 'Space':
-        break
-      default:
-        break
       }
     }
   }
