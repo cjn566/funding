@@ -11,51 +11,62 @@ import axios from 'axios'
 import CostItem from '@/components/costItem'
 Vue.use(Vuex)
 
-// const paths = new Map()
+const paths = new Map()
 
-function searchByPath (root, path) {
+function getItemById (root, id) {
   let item = root
+  const path = paths.get(id)
   for (let i = 0; i < path.length; i++) {
     item = item.children[path[i]]
   }
   return item
 }
 
-function buildTree (item, path, idx) {
+function startBuildTree (root) {
+  paths.clear()
+  return buildTreeRecursively(root, [], -1)
+}
+
+function buildTreeRecursively (item, path, idx) {
   if (idx >= 0) {
     path.push(idx)
+    paths.set(item.id, path)
+    item.order = idx
   }
-  item.path = path
   if (item.children?.length > 0) {
-    item.children = item.children.map((child, idx) => {
-      return buildTree(child, [...path], idx)
+    item.children.sort((a, b) => {
+      return (b.order || 0) - (a.order || 0)
     })
-    item.min_cost = item.children.reduce((sum, child) => {
-      return sum + child.min_cost
-    }, 0)
-    item.max_cost = item.children.reduce((sum, child) => {
-      return sum + child.max_cost
-    }, 0)
+    item.children = item.children.map((child, idx) => {
+      return buildTreeRecursively(child, [...path], idx)
+    })
+    calcItemCostSums(item)
   }
   return item
 }
 
-function recalcSums (root, path) {
-  const items = []
-  items.push(root)
+function calcItemCostSums (item) {
+  item.min_cost = item.children.reduce((sum, child) => {
+    return sum + child.min_cost
+  }, 0)
+  item.max_cost = item.children.reduce((sum, child) => {
+    return sum + child.max_cost
+  }, 0)
+}
+
+function recalcSums (root, id) {
+  const items = [root]
+  const path = paths.get(id)
   let item
+  // Create a chain of item references down to the modified item
   for (let i = 0; i < path.length - 1; i++) {
     item = items[i]
     items.push(item.children[path[i]])
   }
+  // Reverse the chain, calculating the sums on the way up
   for (let i = items.length - 1; i > 0; i--) {
     item = items[i]
-    item.min_cost = item.children.reduce((sum, child) => {
-      return sum + child.min_cost
-    }, 0)
-    item.max_cost = item.children.reduce((sum, child) => {
-      return sum + child.max_cost
-    }, 0)
+    calcItemCostSums(item)
   }
   return items[0]
 }
@@ -67,33 +78,28 @@ const store = new Vuex.Store({
   },
   mutations: {
     setItems (state, payload) {
-      state.treeData = buildTree(payload.items, [], -1)
+      state.treeData = startBuildTree(payload.items)
     },
     updateItem (state, payload) {
-      const item = searchByPath(state.treeData, payload.path)
-      let rebuild = false
+      const item = getItemById(state.treeData, payload.id)
+      let rebuildSums = false
       payload.updates.forEach((update) => {
         if (update.key === 'min_cost' || update.key === 'max_cost') {
-          rebuild = true
+          rebuildSums = true
         }
         item[update.key] = update.value
       })
-      if (rebuild) {
-        state.treeData = recalcSums(state.treeData, payload.path)
+      if (rebuildSums) {
+        state.treeData = recalcSums(state.treeData, payload.id)
       }
     },
     // setFocus (state, payload) {
     //   state.focus = payload.id
     // },
     relocateItem (state, payload) {
-      let parent
-      if (payload.path.length >= 2) {
-        parent = searchByPath(state.treeData, payload.path.slice(0, payload.path.length - 1))
-      }
-      else {
-        parent = state.treeData
-      }
-      const childIdx = payload.path[payload.path.length - 1]
+      const parent = getItemById(state.treeData, payload.parent)
+      // TODO: implement order
+      const childIdx = payload.order
       switch (payload.action) {
       case 'up':
         // Move child up within it's siblings. If already at top, do nothing.
@@ -121,15 +127,16 @@ const store = new Vuex.Store({
         // If the item's parent is not root, move the item to be the next sibling of it's parent
         if (parent.id !== 0) {
           const cutChild = parent.children.splice(childIdx, 1)[0]
-          const grandparent = searchByPath(state.treeData, parent.path.slice(0, parent.path.length - 1))
-          grandparent.children.splice(parent.path[parent.path.length - 1] + 1, 0, cutChild)
+          const grandparent = getItemById(state.treeData, parent.parent)
+          grandparent.children.splice(parent.order + 1, 0, cutChild)
         }
         break
       }
-      state.treeData = buildTree(state.treeData, [], -1)
+      state.treeData = startBuildTree(state.treeData)
     },
     makeFolder (state, payload) {
-      const item = searchByPath(state.treeData, payload.path)
+      // TODO: ...
+      const item = getItemById(state.treeData, payload.id)
       const newPath = [...item.path].push(0)
       item.children = [{
         name: item.name + ' (component)',
@@ -139,16 +146,17 @@ const store = new Vuex.Store({
       }]
     },
     addItem (state, payload) {
-      const parent = searchByPath(state.treeData, payload.parentPath)
+      const parent = getItemById(state.treeData, payload.parentPath)
       parent.children.push({
         // Todo: get new ID from server
         id: payload.newId
       })
     },
     deleteItem (state, payload) {
-      const parent = searchByPath(state.treeData, payload.path.slice(0, payload.path.length - 1))
-      parent.children.splice(payload.path[payload.path.length - 1], 1)
-      state.treeData = buildTree(state.treeData, [], -1)
+      // TODO: Delete (or mark deleted) full descendent tree from server
+      const parent = getItemById(state.treeData, payload.parent)
+      parent.children.splice(payload.order, 1)
+      state.treeData = startBuildTree(state.treeData)
     }
   },
   actions: {
@@ -166,7 +174,6 @@ const store = new Vuex.Store({
       const url = '/api/app/updateItem'
       // payload = {
       //   id,
-      //   path,
       //   updates: [
       //     {
       //       key,
