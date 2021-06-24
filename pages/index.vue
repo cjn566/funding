@@ -22,6 +22,19 @@ function getItemById (root, id) {
   return item
 }
 
+function rebuildPaths(root) {
+  paths.clear()
+  rebuildPathsRecursively(root)
+}
+
+function rebuildPathsRecursively(item, path, idx) {
+  if (idx >= 0) {
+    path.push(idx)
+    paths.set(item.id, path)
+    item.order = idx
+  }
+}
+
 function startBuildTree (root) {
   paths.clear()
   return buildTreeRecursively(root, [], -1)
@@ -34,8 +47,8 @@ function buildTreeRecursively (item, path, idx) {
     item.order = idx
   }
   if (item.children?.length > 0) {
-    item.children.sort((a, b) => {
-      return (b.order || 0) - (a.order || 0)
+    item.children = item.children.sort((a, b) => {
+      return (a.order || 0) - (b.order || 0)
     })
     item.children = item.children.map((child, idx) => {
       return buildTreeRecursively(child, [...path], idx)
@@ -132,7 +145,7 @@ const store = new Vuex.Store({
         }
         break
       }
-      state.treeData = startBuildTree(state.treeData)
+      state.treeData = rebuildPaths(state.treeData)
     },
     makeFolder (state, payload) {
       // TODO: ...
