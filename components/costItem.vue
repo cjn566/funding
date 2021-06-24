@@ -198,7 +198,7 @@ export default {
     makeFolder () {
       if (!this.isFolder) {
         this.$store.commit('makeFolder', {
-          path: this.item.path
+          id: this.item.id
         })
         this.isOpen = true
       }
@@ -206,14 +206,13 @@ export default {
     updateItem (updates) {
       this.$store.dispatch('updateItem', {
         id: this.item.id,
-        path: this.item.path,
         updates
       })
       this.takeFocus()
     },
     addItem () {
       this.$store.commit('addItem', {
-        parentPath: this.item.path
+        id: this.item.id
       })
     },
     takeFocus (fromBelow = false) {
@@ -251,7 +250,8 @@ export default {
     },
     harakiri () {
       this.$store.commit('deleteItem', {
-        path: this.item.path
+        parent: this.item.parent,
+        order: this.item.order
       })
     },
 
@@ -286,7 +286,11 @@ export default {
             this.$emit('focus-change', 'up')
           }
           else {
-            this.$store.commit('relocateItem', { path: this.item.path, action: 'up' })
+            this.$store.commit('relocateItem', {
+              parent: this.item.parent,
+              order: this.item.order,
+              action: 'up'
+            })
           }
           break
         case 'ArrowDown':
@@ -299,7 +303,11 @@ export default {
             }
           }
           else {
-            this.$store.commit('relocateItem', { path: this.item.path, action: 'down' })
+            this.$store.commit('relocateItem', {
+              parent: this.item.parent,
+              order: this.item.order,
+              action: 'down'
+            })
           }
           break
         case 'ArrowLeft':
@@ -315,10 +323,18 @@ export default {
           break
         case 'Tab':
           if (shift) {
-            this.$store.commit('relocateItem', { path: this.item.path, action: 'out' })
+            this.$store.commit('relocateItem', {
+              parent: this.item.parent,
+              order: this.item.order,
+              action: 'out'
+            })
           }
           else {
-            this.$store.commit('relocateItem', { path: this.item.path, action: 'in' })
+            this.$store.commit('relocateItem', {
+              parent: this.item.parent,
+              order: this.item.order,
+              action: 'in'
+            })
           }
           event.preventDefault()
           break
