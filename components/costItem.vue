@@ -1,6 +1,7 @@
 <template>
   <div>
     <b-row
+      v-if="!root"
       ref="me"
       class="cost-item-row"
       tabindex="0"
@@ -15,7 +16,8 @@
           <img src="@/assets/icons/more-1.svg" alt="expand" height="15px" @click="makeFolder">
         </span>
       </span>
-      <span class="cost-range-spacer">
+
+      <span v-if="!noCost" class="cost-range-spacer">
         <span v-if="isFolder" class="sum-costs">${{ costString }}</span>
         <span v-else>
 
@@ -81,12 +83,14 @@ export default {
     },
     root: {
       type: Boolean,
-      default () { return false }
+      default () {
+        return false
+      }
     }
   },
   data () {
     return {
-      isOpen: false,
+      isOpen: true,
       editing: null,
       editables: ['costs', 'text'],
       tempValue: ''
@@ -95,6 +99,9 @@ export default {
   computed: {
     isFolder () {
       return this.item.children && this.item.children.length
+    },
+    noCost () {
+      return this.item.min_cost == null && this.item.max_cost == null
     },
     costString () {
       return '' +
@@ -112,15 +119,18 @@ export default {
       this.$refs.text.select()
     },
     enableEditing (which) {
-      this.editing = which
       switch (which) {
       case 'costs':
-        this.tempValue = this.costString
-        this.$nextTick(() => {
-          this.selectAllCosts()
-        })
+        if (!this.isFolder) {
+          this.editing = which
+          this.tempValue = this.costString
+          this.$nextTick(() => {
+            this.selectAllCosts()
+          })
+        }
         break
       case 'text':
+        this.editing = which
         this.tempValue = this.item.name
         this.$nextTick(() => {
           this.selectAllText()
@@ -163,7 +173,7 @@ export default {
           }
         }
       }
-      this.updateItem('costs', { min, max })
+      this.updateItem([{ key: 'min_cost', value: min }, { key: 'max_cost', value: max }])
     },
     saveEdit (andClose) {
       switch (this.editing) {
@@ -171,7 +181,7 @@ export default {
         this.saveCosts()
         break
       case 'text':
-        this.updateItem('name', this.tempValue)
+        this.updateItem([{ key: 'name', value: this.tempValue }])
         break
       default:
         break
@@ -188,31 +198,35 @@ export default {
     makeFolder () {
       if (!this.isFolder) {
         this.$store.commit('makeFolder', {
-          id: this.item.id
+          path: this.item.path
         })
         this.isOpen = true
       }
     },
-    updateItem (key, value) {
-      this.$store.commit('updateItem', {
-        id: this.item.id, key, value, path: this.item.path
+    updateItem (updates) {
+      this.$store.dispatch('updateItem', {
+        id: this.item.id,
+        path: this.item.path,
+        updates
       })
       this.takeFocus()
     },
     addItem () {
       this.$store.commit('addItem', {
-        parentId: this.item.id
+        parentPath: this.item.path
       })
     },
     takeFocus (fromBelow = false) {
-      if (fromBelow && this.isFolder && this.isOpen) {
-        this.$refs.childRefs[this.$refs.childRefs.length - 1].takeFocus(fromBelow)
-      }
-      else {
-        this.$refs.me.focus()
+      if (!this.root) {
+        if (fromBelow && this.isFolder && this.isOpen) {
+          this.$refs.childRefs[this.$refs.childRefs.length - 1].takeFocus(fromBelow)
+        }
+        else {
+          this.$refs.me.focus()
         // this.$store.commit('setFocus', {
         //   id: this.item.id
         // })
+        }
       }
     },
     focusChange (idx, event) {
@@ -235,6 +249,11 @@ export default {
         break
       }
     },
+    harakiri () {
+      this.$store.commit('deleteItem', {
+        path: this.item.path
+      })
+    },
 
     keyCheck (event) {
       const shift = event.getModifierState('Shift')
@@ -244,6 +263,7 @@ export default {
         switch (event.key) {
         case 'Enter':
           this.saveEdit(true)
+          this.takeFocus()
           break
         case 'Tab':
           this.cycleEdit(shift)
@@ -266,7 +286,7 @@ export default {
             this.$emit('focus-change', 'up')
           }
           else {
-            this.$store.commit('relocateItem', { id: this.item.id, action: 'up' })
+            this.$store.commit('relocateItem', { path: this.item.path, action: 'up' })
           }
           break
         case 'ArrowDown':
@@ -279,7 +299,7 @@ export default {
             }
           }
           else {
-            this.$store.commit('relocateItem', { id: this.item.id, action: 'down' })
+            this.$store.commit('relocateItem', { path: this.item.path, action: 'down' })
           }
           break
         case 'ArrowLeft':
@@ -295,10 +315,10 @@ export default {
           break
         case 'Tab':
           if (shift) {
-            this.$store.commit('relocateItem', { id: this.item.id, action: 'out' })
+            this.$store.commit('relocateItem', { path: this.item.path, action: 'out' })
           }
           else {
-            this.$store.commit('relocateItem', { id: this.item.id, action: 'in' })
+            this.$store.commit('relocateItem', { path: this.item.path, action: 'in' })
           }
           event.preventDefault()
           break
@@ -310,7 +330,11 @@ export default {
           this.enableEditing('costs')
           event.preventDefault()
           break
+        case 'x':
+          this.makeFolder()
+          break
         case 'Delete':
+          this.harakiri()
           break
         case 'Space':
           break

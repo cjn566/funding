@@ -4,6 +4,7 @@ export default function mainRoutes (mainService, logger) {
   const router = new Router()
   const controller = new MainController(mainService, logger)
   router.get('/newItem/:parentId', async (req, res) => await controller.newItem(req, res))
+  router.post('/updateItem', async (req, res) => await controller.updateItem(req, res))
   router.get('/items', async (req, res) => await controller.getItems(req, res))
   return router
 }
@@ -35,6 +36,16 @@ class MainController {
   async newItem (req, res) {
     try {
       const success = await this.mainService.newItem(req.params.parentId)
+      res.status(200).json(success)
+    }
+    catch (ex) {
+      this.logError(ex, res)
+    }
+  }
+
+  async updateItem (req, res) {
+    try {
+      const success = await this.mainService.updateItem(req.body)
       res.status(200).json(success)
     }
     catch (ex) {

@@ -24,4 +24,11 @@ export default class MainService {
     const result = await this.mainRepo.newItem(parentId)
     return result.id
   }
+
+  async updateItem (payload) {
+    await payload.updates.forEach(async (update) => {
+      await this.mainRepo.updateItem(payload.id, update.key, update.value)
+    })
+    return true
+  }
 }
