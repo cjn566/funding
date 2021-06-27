@@ -4,6 +4,7 @@
       v-if="!root"
       ref="me"
       class="cost-item-row"
+      :class="{ checked: isChecked}"
       tabindex="0"
       @keydown="keyCheck"
     >
@@ -59,6 +60,7 @@
         ref="childRefs"
         :key="index"
         :item="child"
+        :checked="isChecked"
         @focus-change="focusChange(index, $event)"
       />
     </b-collapse>
@@ -77,8 +79,15 @@ export default {
           id: null,
           name: 'untitled',
           min_cost: 0,
-          max_cost: 0
+          max_cost: 0,
+          checked: false
         }
+      }
+    },
+    checked: {
+      type: Boolean,
+      default () {
+        return false
       }
     },
     root: {
@@ -97,6 +106,9 @@ export default {
     }
   },
   computed: {
+    isChecked () {
+      return this.checked || this.item.checked
+    },
     isFolder () {
       return this.item.children && this.item.children.length
     },
@@ -288,7 +300,7 @@ export default {
           else {
             this.$store.commit('relocateItem', {
               parent: this.item.parent,
-              order: this.item.order,
+              id: this.item.id,
               action: 'up'
             })
           }
@@ -305,7 +317,7 @@ export default {
           else {
             this.$store.commit('relocateItem', {
               parent: this.item.parent,
-              order: this.item.order,
+              id: this.item.id,
               action: 'down'
             })
           }
@@ -325,14 +337,14 @@ export default {
           if (shift) {
             this.$store.commit('relocateItem', {
               parent: this.item.parent,
-              order: this.item.order,
+              id: this.item.id,
               action: 'out'
             })
           }
           else {
             this.$store.commit('relocateItem', {
               parent: this.item.parent,
-              order: this.item.order,
+              id: this.item.id,
               action: 'in'
             })
           }
@@ -352,7 +364,8 @@ export default {
         case 'Delete':
           this.harakiri()
           break
-        case 'Space':
+        case ' ':
+          this.$store.commit('updateItem', { id: this.item.id, updates: [{ key: 'checked', value: !this.item.checked }] })
           break
         default:
           break
