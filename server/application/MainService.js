@@ -20,15 +20,23 @@ export default class MainService {
     }
   }
 
-  async newItem (parentId) {
-    const result = await this.mainRepo.newItem(parentId)
-    return result.id
+  async newItem (item) {
+    console.log('service new item', item)
+    const result = await this.mainRepo.newItem(item.parent, item.name)
+    return result
   }
 
   async updateItem (payload) {
-    await payload.updates.forEach(async (update) => {
-      await this.mainRepo.updateItem(payload.id, update.key, update.value)
+    await Object.keys(payload.updates).forEach(async (key) => {
+      await this.mainRepo.updateItem(payload.id, key, payload.updates[key])
     })
+    console.log('\n\n\n\n\n\n')
+    return true
+  }
+
+  async deleteItem (id) {
+    await this.mainRepo.deleteItem(id)
+    console.log('deleted')
     return true
   }
 }

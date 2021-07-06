@@ -3,8 +3,9 @@ import { Router } from 'express'
 export default function mainRoutes (mainService, logger) {
   const router = new Router()
   const controller = new MainController(mainService, logger)
-  router.get('/newItem/:parentId', async (req, res) => await controller.newItem(req, res))
+  router.post('/newItem', async (req, res) => await controller.newItem(req, res))
   router.post('/updateItem', async (req, res) => await controller.updateItem(req, res))
+  router.delete('/deleteItem/:id', async (req, res) => await controller.deleteItem(req, res))
   router.get('/items', async (req, res) => await controller.getItems(req, res))
   return router
 }
@@ -35,8 +36,9 @@ class MainController {
 
   async newItem (req, res) {
     try {
-      const success = await this.mainService.newItem(req.params.parentId)
-      res.status(200).json(success)
+      console.log('controller new item', req.body)
+      const result = await this.mainService.newItem(req.body)
+      res.status(200).json(result)
     }
     catch (ex) {
       this.logError(ex, res)
@@ -47,6 +49,21 @@ class MainController {
     try {
       const success = await this.mainService.updateItem(req.body)
       res.status(200).json(success)
+    }
+    catch (ex) {
+      this.logError(ex, res)
+    }
+  }
+
+  async deleteItem (req, res) {
+    await this.doStuff(res, async () => {
+      return await this.mainService.deleteItem(req.params.id)
+    })
+  }
+
+  async doStuff (res, stuff) {
+    try {
+      res.status(200).json(await stuff())
     }
     catch (ex) {
       this.logError(ex, res)

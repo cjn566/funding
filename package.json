@@ -1,8 +1,8 @@
 {
-  "name": "keycard-access",
+  "name": "funding",
   "version": "0.1.0",
-  "description": "Keycard Access",
-  "author": "Etibyte",
+  "description": "A heirarchical checklist incorporating expected costs.",
+  "author": "Colten Nye",
   "private": false,
   "scripts": {
     "debug": "cross-env NODE_ENV=development nodemon --inspect --exec babel-node server/index.js --watch server",

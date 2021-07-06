@@ -21,7 +21,11 @@
   }
 }
 
-.make-folder-icon {
+.name-section {
+  width: 300px;
+}
+
+.make-collection-icon {
   display: none;
 }
 
@@ -31,7 +35,7 @@
   &:hover {
     background-color:gainsboro;
 
-    .make-folder-icon {
+    .make-collection-icon {
       display: inline;
     }
   }
