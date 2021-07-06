@@ -57,8 +57,6 @@
         :key="index"
         :item="child"
         :inheritchecked="isChecked"
-        :focused="focused"
-        @focus-change="focusChange(index, $event)"
       />
     </b-collapse>
   </div>
@@ -249,6 +247,7 @@ export default {
       }
     },
     focusChange (idx, event) {
+      // this is the parent taking the action
       switch (event) {
       case 'up':
         if (idx === 0) {
@@ -292,11 +291,13 @@ export default {
           break
         case 'ArrowUp':
           this.saveEdit(true)
-          this.$emit('focus-change', 'up')
+          this.state.commit('focus', { id: this.item.id, how: 'up' })
+          // this.$emit('focus-change', 'up')
           break
         case 'ArrowDown':
           this.saveEdit(true)
-          this.$emit('focus-change', 'down')
+          this.state.commit('focus', 'down')
+          // this.$emit('focus-change', 'down')
           break
         }
       }
@@ -304,7 +305,8 @@ export default {
         switch (event.key) {
         case 'ArrowUp':
           if (!ctrl) {
-            this.$emit('focus-change', 'up')
+            this.state.commit('focus', 'up')
+            // this.$emit('focus-change', 'up')
           }
           else {
             this.$store.commit('relocateItem', {
@@ -316,12 +318,13 @@ export default {
           break
         case 'ArrowDown':
           if (!ctrl) {
-            if (this.isCollection && this.item.is_open) {
-              this.$refs.childRefs[0].takeFocus()
-            }
-            else {
-              this.$emit('focus-change', 'down')
-            }
+            this.state.commit('focus', 'down')
+            // if (this.isCollection && this.item.is_open) {
+            //   this.$refs.childRefs[0].takeFocus()
+            // }
+            // else {
+            //   this.$emit('focus-change', 'down')
+            // }
           }
           else {
             this.$store.commit('relocateItem', {

@@ -12,15 +12,15 @@ import CostItem from '@/components/costItem'
 Vue.use(Vuex)
 
 // key = id
-// value = { idx, parent }
-const indices = new Map()
+// value = { idx, parent, children[] }
+const treeMap = new Map()
 
 function getItemById (root, id) {
   const route = []
   let currId = id
   let item
   while (currId !== 1) {
-    item = indices.get(currId)
+    item = treeMap.get(currId)
     route.unshift(item.idx)
     currId = item.parent
   }
@@ -36,8 +36,12 @@ function rebuildPaths (root, updateItem) {
 }
 
 function rebuildPathsRecursively (item, idx, parent, updateItem) {
+  // TODO: this is fucky...
   if (idx >= 0 && (item.idx !== idx || item.parent !== parent)) {
-    indices.set(item.id, { parent, idx })
+    treeMap.set(item.id, {
+      parent,
+      idx
+    })
     item.idx = idx
     item.parent = parent
     updateItem(item.id, idx, parent)
@@ -51,13 +55,16 @@ function rebuildPathsRecursively (item, idx, parent, updateItem) {
 }
 
 function startBuildTree (root) {
-  indices.clear()
+  treeMap.clear()
   return buildTreeRecursively(root, -1)
 }
 
 function buildTreeRecursively (item, idx) {
   if (idx >= 0) {
-    indices.set(item.id, { parent: item.parent, idx })
+    treeMap.set(item.id, {
+      parent: item.parent,
+      idx
+    })
   }
   if (item.children?.length > 0) {
     item.children = item.children.sort((a, b) => {
@@ -82,12 +89,12 @@ function calcItemCostSums (item) {
 }
 
 function recalcSums (root, id) {
-  // Build route of indices to target item
-  let foo = indices.get(id)
+  // Build route of treeMap to target item
+  let foo = treeMap.get(id)
   const route = [foo.idx]
   let parentId = foo.parent
   while (parentId !== 1) {
-    foo = indices.get(parentId)
+    foo = treeMap.get(parentId)
     route.unshift(foo.idx)
     parentId = foo.parent
   }
@@ -109,7 +116,17 @@ function recalcSums (root, id) {
 const store = new Vuex.Store({
   state: {
     treeData: {},
-    focused: 1
+    focused: 1,
+    updateOrder: (id, idx, parent) => {
+      const url = '/api/app/updateItem'
+      axios.post(url, {
+        id,
+        updates: {
+          idx,
+          parent
+        }
+      })
+    }
   },
   mutations: {
     setItems (state, payload) {
@@ -135,13 +152,14 @@ const store = new Vuex.Store({
       // TODO: keep focus on the moved item
       let rootAffected = null
       const parent = getItemById(state.treeData, payload.parent)
-      const childIdx = indices.get(payload.id).idx
+      const childIdx = treeMap.get(payload.id).idx
       switch (payload.action) {
       case 'up':
         // Move child up within it's siblings. If already at top, do nothing.
         if (childIdx > 0) {
           const cutChild = parent.children.splice(childIdx, 1)[0]
           parent.children.splice(childIdx - 1, 0, cutChild)
+          state.focused = cutChild.id
           rootAffected = parent
         }
         break
@@ -150,29 +168,31 @@ const store = new Vuex.Store({
         if (childIdx < (parent.children.length - 1)) {
           const cutChild = parent.children.splice(childIdx, 1)[0]
           parent.children.splice(childIdx + 1, 0, cutChild)
+          state.focused = cutChild.id
           rootAffected = parent
         }
         break
       case 'in':
-        // If the item has a sibling above it that already has children
+        // If the item has a sibling above it...
         if (childIdx > 0) {
           const destItem = parent.children[childIdx - 1]
           let doTheThing = false
-          // If it already has children
+          // ...that already has children
           if (destItem.children?.length > 0) {
             doTheThing = true
           }
-          // If it has no costs
+          // Or if it has no costs
           else if (!destItem.min_cost && !destItem.max_cost) {
             doTheThing = true
           }
-          // If the user wishes to lose assiciated costs
+          // Or if the user wishes to lose assiciated costs
           else if (confirm(`This action will cause ${destItem.name} to become a collection, losing it's associated costs. Do you wish to do this?`)) {
             doTheThing = true
           }
           if (doTheThing) {
             const cutChild = parent.children.splice(childIdx, 1)[0]
             parent.children[childIdx - 1].children.push(cutChild)
+            state.focused = cutChild.id
             rootAffected = parent
           }
         }
@@ -183,21 +203,13 @@ const store = new Vuex.Store({
           const cutChild = parent.children.splice(childIdx, 1)[0]
           const grandparent = getItemById(state.treeData, parent.parent)
           grandparent.children.splice(parent.idx + 1, 0, cutChild)
+          state.focused = cutChild.id
           rootAffected = grandparent
         }
         break
       }
       if (rootAffected !== null) {
-        rootAffected = rebuildPaths(rootAffected, (id, idx, parent) => {
-          const url = '/api/app/updateItem'
-          axios.post(url, {
-            id,
-            updates: {
-              idx,
-              parent
-            }
-          })
-        })
+        rootAffected = rebuildPaths(rootAffected, state.updateOrder)
         state.treeData = recalcSums(state.treeData, rootAffected.id)
       }
     },
@@ -205,11 +217,63 @@ const store = new Vuex.Store({
       const parent = getItemById(state.treeData, payload.parent)
       parent.children.splice(payload.idx, 1)
       recalcSums(state.treeData, parent.id)
+    },
+    focus (state, how) {
+      const former = treeMap.get(state.focused)
+      let parent = null
+      if (former.parent !== null) {
+        parent = treeMap.get(former.parent)
+      }
+      switch (how) {
+      case 'up':
+        if (former.idx === 0) {
+          // move focus from first child up to parent, if there is one
+          if (parent) {
+            state.focused = parent.id
+          }
+        }
+        else {
+          // Check if the sibling above is expanded
+          let item = getItemById(state.treeData, parent.children[former.idx - 1])
+          while (item.children?.length > 0 && item.is_open) {
+            item = getItemById(state.treeData, item.children[item.children.length - 1])
+          }
+          // move focus to sibling above
+          state.focused = item.id // TODO: implement children in treeMap map
+        }
+        break
+      case 'down': {
+        // Check if the former has children and is expanded
+        const formerAsItem = getItemById(state.treeData, state.focused)
+        if (formerAsItem.children?.length > 0 && formerAsItem.is_open) {
+          state.focused = formerAsItem.children[0].id
+        }
+        else {
+          const parentAsItem = getItemById(state.treeData, former.parent)
+          if (former.idx > parentAsItem.children.length - 1) {
+            // Move focus to former's next sibling
+            state.focused = parentAsItem.children[former.idx + 1].id
+          }
+          else {
+            // Check if there is a sibling, keep escalating until there is one or reach the end
+            let item = getItemById(state.treeData, parent.id)
+            while (item.children?.length > 0 && item.is_open) {
+              item = getItemById(state.treeData, item.children[item.children.length - 1])
+            }
+            // move focus to sibling above
+            state.focused = item.id // TODO: implement children in treeMap map
+          }
+        }
+        break
+      }
+      default:
+        break
+      }
     }
   },
   actions: {
     async newSibling (context, payload) {
-      const boop = indices.get(payload.id)
+      const boop = treeMap.get(payload.id)
       const parent = getItemById(context.state.treeData, boop.parent)
       const placement = boop.idx + 1
       let newItem = {
@@ -239,7 +303,7 @@ const store = new Vuex.Store({
       const url = '/api/app/newItem'
       const result = await axios.post(url, item)
       item.id = result.data
-      indices.set(item.id, { idx: item.idx, parent: item.parent })
+      treeMap.set(item.id, { idx: item.idx, parent: item.parent })
       return item
     },
     updateItem (context, payload) {
