@@ -9,19 +9,31 @@
       @keydown="keyCheck"
     >
       <span class="collapse-icons-spacer">
-        <span v-if="isFolder">
-          <img v-if="!isOpen" src="@/assets/icons/next-10.svg" alt="collapse" height="10px" @click="toggleCollapse">
+        <span v-if="isCollection">
+          <img v-if="!item.is_open" src="@/assets/icons/next-10.svg" alt="collapse" height="10px" @click="toggleCollapse">
           <img v-else src="@/assets/icons/download-12.svg" alt="expand" height="10px" @click="toggleCollapse">
         </span>
-        <span v-else class="make-folder-icon" @click="makeFolder">
-          <img src="@/assets/icons/more-1.svg" alt="expand" height="15px" @click="makeFolder">
+        <span v-else class="make-collection-icon" @click="makeCollection">
+          <img src="@/assets/icons/more-1.svg" alt="expand" height="15px">
         </span>
       </span>
 
-      <span v-if="!noCost" class="cost-range-spacer">
-        <span v-if="isFolder" class="sum-costs">${{ costString }}</span>
-        <span v-else>
+      <div style="display: inline-block" class="name-section">
+        <div v-show="editing !== 'text'">
+          <span class="text" @click="enableEditing('text')">{{ item.name }}</span>
+        </div>
+        <div v-show="editing === 'text'">
+          <b-form-input
+            ref="text"
+            v-model="tempValue"
+            @focus="enableEditing('text')"
+          />
+        </div>
+      </div>
 
+      <span v-show="!noCost || editing === 'costs'" class="cost-range-spacer">
+        <span v-if="isCollection" class="sum-costs">${{ costString }}</span>
+        <span v-else>
           <div style="display: inline-block">
             <div v-show="editing !== 'costs'">
               <span class="text" @click="enableEditing('costs')">${{ costString }}</span>
@@ -31,27 +43,11 @@
                 ref="costsText"
                 v-model="tempValue"
                 @focus="enableEditing('costs')"
-                @blur="saveEdit(true)"
               />
             </div>
           </div>
-
         </span>
       </span>
-
-      <div style="display: inline-block">
-        <div v-show="editing !== 'text'">
-          <span class="text" @click="enableEditing('text')">{{ item.name }}</span>
-        </div>
-        <div v-show="editing === 'text'">
-          <b-form-input
-            ref="text"
-            v-model="tempValue"
-            @focus="enableEditing('text')"
-            @blur="saveEdit(true)"
-          />
-        </div>
-      </div>
     </b-row>
 
     <b-collapse id="collapse-1" v-model="isOpen" class="cost-item-full">
@@ -60,7 +56,8 @@
         ref="childRefs"
         :key="index"
         :item="child"
-        :checked="isChecked"
+        :inheritchecked="isChecked"
+        :focused="focused"
         @focus-change="focusChange(index, $event)"
       />
     </b-collapse>
@@ -68,7 +65,6 @@
 </template>
 
 <script>
-
 export default {
   name: 'CostItem',
   props: {
@@ -80,11 +76,12 @@ export default {
           name: 'untitled',
           min_cost: 0,
           max_cost: 0,
-          checked: false
+          checked: false,
+          is_open: true
         }
       }
     },
-    checked: {
+    inheritchecked: {
       type: Boolean,
       default () {
         return false
@@ -99,26 +96,37 @@ export default {
   },
   data () {
     return {
-      isOpen: true,
       editing: null,
       editables: ['costs', 'text'],
       tempValue: ''
     }
   },
   computed: {
-    isChecked () {
-      return this.checked || this.item.checked
+    isOpen: {
+      get () {
+        return this.item.is_open || this.root
+      },
+      set () { }
     },
-    isFolder () {
+    isChecked () {
+      return this.inheritchecked || this.item.checked
+    },
+    isCollection () {
       return this.item.children && this.item.children.length
     },
     noCost () {
-      return this.item.min_cost == null && this.item.max_cost == null
+      return this.item.max_cost === 0 || (this.item.min_cost == null && this.item.max_cost == null)
     },
     costString () {
-      return '' +
-      (this.item.min_cost == null ? '0' : this.item.min_cost) +
+      return '' + this.item.min_cost +
       ((this.item.max_cost === this.item.min_cost || this.item.max_cost === null) ? '' : (' - ' + this.item.max_cost))
+    },
+    focused () {
+      if (this.$store.state.focused === this.item.id) {
+        this.takeFocus(false)
+        return true
+      }
+      return false
     }
   },
   methods: {
@@ -133,7 +141,7 @@ export default {
     enableEditing (which) {
       switch (which) {
       case 'costs':
-        if (!this.isFolder) {
+        if (!this.isCollection) {
           this.editing = which
           this.tempValue = this.costString
           this.$nextTick(() => {
@@ -152,7 +160,7 @@ export default {
     cycleEdit (reverse) {
       const curEditIdx = this.editables.indexOf(this.editing)
       let newEdit = this.editables[(curEditIdx + (reverse ? 1 : 1)) % this.editables.length]
-      if (this.isFolder && newEdit === 'costs') {
+      if (this.isCollection && newEdit === 'costs') {
         newEdit = this.editables[(curEditIdx + (reverse ? 2 : 2)) % this.editables.length]
       }
       this.enableEditing(newEdit)
@@ -185,7 +193,7 @@ export default {
           }
         }
       }
-      this.updateItem([{ key: 'min_cost', value: min }, { key: 'max_cost', value: max }])
+      this.updateItem({ min_cost: min, max_cost: max })
     },
     saveEdit (andClose) {
       switch (this.editing) {
@@ -193,7 +201,7 @@ export default {
         this.saveCosts()
         break
       case 'text':
-        this.updateItem([{ key: 'name', value: this.tempValue }])
+        this.updateItem({ name: this.tempValue })
         break
       default:
         break
@@ -203,16 +211,16 @@ export default {
       }
     },
     toggleCollapse () {
-      if (this.isFolder) {
-        this.isOpen = !this.isOpen
+      if (this.isCollection) {
+        this.updateItem({ is_open: !this.item.is_open })
       }
     },
-    makeFolder () {
-      if (!this.isFolder) {
-        this.$store.commit('makeFolder', {
+    makeCollection () {
+      if (!this.isCollection) {
+        this.$store.dispatch('makeCollection', {
           id: this.item.id
         })
-        this.isOpen = true
+        this.item.is_open = true
       }
     },
     updateItem (updates) {
@@ -229,7 +237,7 @@ export default {
     },
     takeFocus (fromBelow = false) {
       if (!this.root) {
-        if (fromBelow && this.isFolder && this.isOpen) {
+        if (fromBelow && this.isCollection && this.item.is_open) {
           this.$refs.childRefs[this.$refs.childRefs.length - 1].takeFocus(fromBelow)
         }
         else {
@@ -261,9 +269,10 @@ export default {
       }
     },
     harakiri () {
-      this.$store.commit('deleteItem', {
+      this.$store.dispatch('deleteItem', {
+        id: this.item.id,
         parent: this.item.parent,
-        order: this.item.order
+        idx: this.item.idx
       })
     },
 
@@ -307,7 +316,7 @@ export default {
           break
         case 'ArrowDown':
           if (!ctrl) {
-            if (this.isFolder && this.isOpen) {
+            if (this.isCollection && this.item.is_open) {
               this.$refs.childRefs[0].takeFocus()
             }
             else {
@@ -323,14 +332,14 @@ export default {
           }
           break
         case 'ArrowLeft':
-          if (this.isFolder) {
-            this.isOpen = false
+          if (this.isCollection) {
+            this.updateItem({ is_open: false })
           }
           event.preventDefault()
           break
         case 'ArrowRight':
-          if (this.isFolder) {
-            this.isOpen = true
+          if (this.isCollection) {
+            this.updateItem({ is_open: true })
           }
           break
         case 'Tab':
@@ -359,13 +368,16 @@ export default {
           event.preventDefault()
           break
         case 'x':
-          this.makeFolder()
+          this.makeCollection()
           break
         case 'Delete':
           this.harakiri()
           break
         case ' ':
-          this.$store.commit('updateItem', { id: this.item.id, updates: [{ key: 'checked', value: !this.item.checked }] })
+          this.updateItem({ checked: !this.item.checked })
+          break
+        case 'Enter':
+          this.$store.dispatch('newSibling', { id: this.item.id })
           break
         default:
           break
