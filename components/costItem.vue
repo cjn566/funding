@@ -56,6 +56,7 @@
         ref="childRefs"
         :key="index"
         :item="child"
+        :focus-change="focusChange(index)"
         :inheritchecked="isChecked"
         :focused="focused"
         @focus-change="focusChange(index, $event)"
@@ -123,7 +124,7 @@ export default {
     },
     focused () {
       if (this.$store.state.focused === this.item.id) {
-        this.takeFocus(false)
+        // this.takeFocus(false)
         return true
       }
       return false
@@ -275,7 +276,6 @@ export default {
         idx: this.item.idx
       })
     },
-
     keyCheck (event) {
       const shift = event.getModifierState('Shift')
       const ctrl = event.getModifierState('Control')
