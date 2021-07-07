@@ -5,19 +5,23 @@ export default class MainService {
     this.logger = logger
   }
 
-  async getChildrenRecursively (id) {
+  async getChildrenRecursively (id, map) {
     const children = await this.mainRepo.getChildren(id)
     for (const child of children) {
-      child.children = await this.getChildrenRecursively(child.id)
+      child.children = await this.getChildrenRecursively(child.id, map)
+      map.set(child.id, child)
     }
-    return children
+    return children.sort((a, b) => {
+      return a.idx - b.idx
+    }).map(c => c.id)
   }
 
   async getFullTree () {
-    return {
-      id: 1,
-      children: await this.getChildrenRecursively(1)
-    }
+    const res = new Map()
+    const children = await this.getChildrenRecursively(1, res)
+    // TODO: unfuck this
+    res.set(1, { name: 'root', id: 1, idx: 0, parent: null, children, is_open: true })
+    return res
   }
 
   async newItem (item) {

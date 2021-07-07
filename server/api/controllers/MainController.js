@@ -27,7 +27,8 @@ class MainController {
   async getItems (req, res) {
     try {
       const results = await this.mainService.getFullTree()
-      res.status(200).json(results)
+      const bloop = Object.fromEntries(results)
+      res.status(200).json(bloop)
     }
     catch (ex) {
       this.logError(ex, res)

@@ -1,7 +1,6 @@
 <template>
-  <div>
+  <div @click="clicked">
     <b-row
-      v-if="!root"
       ref="me"
       class="cost-item-row"
       :class="{ checked: isChecked}"
@@ -50,9 +49,9 @@
       </span>
     </b-row>
 
-    <b-collapse id="collapse-1" v-model="isOpen" class="cost-item-full">
+    <b-collapse id="collapse-1" v-model="item.is_open" class="cost-item-full">
       <cost-item
-        v-for="(child, index) in item.children"
+        v-for="(child, index) in children"
         ref="childRefs"
         :key="index"
         :item="child"
@@ -75,17 +74,12 @@ export default {
           min_cost: 0,
           max_cost: 0,
           checked: false,
-          is_open: true
+          is_open: true,
+          children: []
         }
       }
     },
     inheritchecked: {
-      type: Boolean,
-      default () {
-        return false
-      }
-    },
-    root: {
       type: Boolean,
       default () {
         return false
@@ -100,12 +94,6 @@ export default {
     }
   },
   computed: {
-    isOpen: {
-      get () {
-        return this.item.is_open || this.root
-      },
-      set () { }
-    },
     isChecked () {
       return this.inheritchecked || this.item.checked
     },
@@ -125,8 +113,17 @@ export default {
         return true
       }
       return false
+    },
+    children () {
+      return this.item.children.map((child) => {
+        return this.$store.state.items[child]
+      }).sort((a, b) => {
+        return (a.idx || 0) - (b.idx || 0)
+      })
     }
   },
+  // mounted () {
+  // },
   methods: {
     selectAllCosts () {
       this.$refs.costsText.focus()
@@ -218,7 +215,6 @@ export default {
         this.$store.dispatch('makeCollection', {
           id: this.item.id
         })
-        this.item.is_open = true
       }
     },
     updateItem (updates) {
@@ -233,39 +229,11 @@ export default {
         id: this.item.id
       })
     },
-    takeFocus (fromBelow = false) {
-      if (!this.root) {
-        if (fromBelow && this.isCollection && this.item.is_open) {
-          this.$refs.childRefs[this.$refs.childRefs.length - 1].takeFocus(fromBelow)
-        }
-        else {
-          this.$refs.me.focus()
-        // this.$store.commit('setFocus', {
-        //   id: this.item.id
-        // })
-        }
-      }
+    clicked () {
+      this.$store.commit('focus', { id: this.item.id, how: 'me' })
     },
-    focusChange (idx, event) {
-      // this is the parent taking the action
-      switch (event) {
-      case 'up':
-        if (idx === 0) {
-          this.takeFocus()
-        }
-        else {
-          this.$refs.childRefs[idx - 1].takeFocus(true)
-        }
-        break
-      case 'down':
-        if (idx === this.$refs.childRefs.length - 1) {
-          this.$emit('focus-change', 'down')
-        }
-        else {
-          this.$refs.childRefs[idx + 1].takeFocus()
-        }
-        break
-      }
+    takeFocus () {
+      this.$refs.me.focus()
     },
     harakiri () {
       this.$store.dispatch('deleteItem', {
@@ -291,12 +259,12 @@ export default {
           break
         case 'ArrowUp':
           this.saveEdit(true)
-          this.state.commit('focus', { id: this.item.id, how: 'up' })
+          this.$store.commit('focus', { id: this.item.id, how: 'up' })
           // this.$emit('focus-change', 'up')
           break
         case 'ArrowDown':
           this.saveEdit(true)
-          this.state.commit('focus', 'down')
+          this.$store.commit('focus', 'down')
           // this.$emit('focus-change', 'down')
           break
         }
@@ -305,7 +273,7 @@ export default {
         switch (event.key) {
         case 'ArrowUp':
           if (!ctrl) {
-            this.state.commit('focus', 'up')
+            this.$store.commit('focus', { id: this.item.id, how: 'up' })
             // this.$emit('focus-change', 'up')
           }
           else {
@@ -318,7 +286,7 @@ export default {
           break
         case 'ArrowDown':
           if (!ctrl) {
-            this.state.commit('focus', 'down')
+            this.$store.commit('focus', { id: this.item.id, how: 'down' })
             // if (this.isCollection && this.item.is_open) {
             //   this.$refs.childRefs[0].takeFocus()
             // }
@@ -380,7 +348,7 @@ export default {
           this.updateItem({ checked: !this.item.checked })
           break
         case 'Enter':
-          this.$store.dispatch('newSibling', { id: this.item.id })
+          this.$store.dispatch('newSibling', { parent: this.item.parent, idx: this.item.idx })
           break
         default:
           break
