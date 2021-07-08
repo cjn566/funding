@@ -25,6 +25,13 @@
   width: 300px;
 }
 
+.text {
+  width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .make-collection-icon {
   display: none;
 }
@@ -41,7 +48,7 @@
   }
 
   &:focus {
-    //background-color:lightgoldenrodyellow;
+    background-color:lightgoldenrodyellow;
   }
 }
 

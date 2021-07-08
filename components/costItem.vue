@@ -1,11 +1,12 @@
 <template>
-  <div @click="clicked">
+  <div>
     <b-row
       ref="me"
       class="cost-item-row"
-      :class="{ checked: isChecked}"
+      :class="{ checked: isChecked }"
       tabindex="0"
       @keydown="keyCheck"
+      @click="clicked"
     >
       <span class="collapse-icons-spacer">
         <span v-if="isCollection">
@@ -17,9 +18,9 @@
         </span>
       </span>
 
-      <div style="display: inline-block" class="name-section">
+      <div style="display: inline-block" class="name-section" @dblclick="enableEditing('text')">
         <div v-show="editing !== 'text'">
-          <span class="text" @click="enableEditing('text')">{{ item.name }}</span>
+          <p class="text">{{ item.name }}</p>
         </div>
         <div v-show="editing === 'text'">
           <b-form-input
@@ -35,7 +36,7 @@
         <span v-else>
           <div style="display: inline-block">
             <div v-show="editing !== 'costs'">
-              <span class="text" @click="enableEditing('costs')">${{ costString }}</span>
+              <span class="text" @dblclick="enableEditing('costs')">${{ costString }}</span>
             </div>
             <div v-show="editing === 'costs'">
               <b-form-input
@@ -56,6 +57,7 @@
         :key="index"
         :item="child"
         :inheritchecked="isChecked"
+        @focus-change="focusChange(index, $event)"
       />
     </b-collapse>
   </div>
@@ -98,32 +100,59 @@ export default {
       return this.inheritchecked || this.item.checked
     },
     isCollection () {
-      return this.item.children && this.item.children.length
+      return this.item.children.length > 0
     },
     noCost () {
-      return this.item.max_cost === 0 || (this.item.min_cost == null && this.item.max_cost == null)
+      return this.costs[0] === 0 || (this.costs[0] == null && this.costs[1] == null)
     },
     costString () {
-      return '' + this.item.min_cost +
-      ((this.item.max_cost === this.item.min_cost || this.item.max_cost === null) ? '' : (' - ' + this.item.max_cost))
+      return '' + this.costs[0] +
+      ((this.costs[1] === this.costs[0] || this.costs[1] === null) ? '' : (' - ' + this.costs[1]))
+    },
+    costs () {
+      if (this.isChecked) {
+        return [0, 0]
+      }
+      if (this.isCollection) {
+        const sum = this.children.reduce((s, c) => {
+          if (c.checked) {
+            return s
+          }
+          return [s[0] + c.min_cost, s[1] + c.max_cost]
+        }, [0, 0])
+        if (this.item.min_cost !== sum[0] || this.item.max_cost !== sum[1]) {
+          this.$store.commit('updateItem', { id: this.item.id, updates: { min_cost: sum[0], max_cost: sum[1] } })
+        }
+        return sum
+      }
+      return [this.item.min_cost, this.item.max_cost]
     },
     focused () {
-      if (this.$store.state.focused === this.item.id) {
-        this.takeFocus(false)
-        return true
-      }
-      return false
+      return this.$store.state.focused
     },
     children () {
-      return this.item.children.map((child) => {
-        return this.$store.state.items[child]
-      }).sort((a, b) => {
-        return (a.idx || 0) - (b.idx || 0)
+      const inflatedChildren = this.item.children.map((childid, idx) => {
+        const child = this.$store.state.items[childid]
+        if (child.idx !== idx) {
+          this.$store.dispatch('updateItem', { id: child.id, updates: { idx } })
+        }
+        return child
       })
+      return inflatedChildren
     }
   },
-  // mounted () {
-  // },
+  watch: {
+    focused (n, old) {
+      if (n.id === this.item.id) {
+        this.takeFocus(false)
+      }
+    }
+  },
+  mounted () {
+    if (this.focused.id === this.item.id) {
+      this.takeFocus(false)
+    }
+  },
   methods: {
     selectAllCosts () {
       this.$refs.costsText.focus()
@@ -188,7 +217,9 @@ export default {
           }
         }
       }
-      this.updateItem({ min_cost: min, max_cost: max })
+      if (min !== this.item.min_cost || max !== this.item.max_cost) {
+        this.updateItem({ min_cost: min, max_cost: max })
+      }
     },
     saveEdit (andClose) {
       switch (this.editing) {
@@ -196,7 +227,9 @@ export default {
         this.saveCosts()
         break
       case 'text':
-        this.updateItem({ name: this.tempValue })
+        if (this.tempValue !== this.item.name) {
+          this.updateItem({ name: this.tempValue })
+        }
         break
       default:
         break
@@ -229,11 +262,43 @@ export default {
         id: this.item.id
       })
     },
-    clicked () {
-      this.$store.commit('focus', { id: this.item.id, how: 'me' })
+    dblclicked (event) {
+      this.enableEditing('text')
     },
-    takeFocus () {
-      this.$refs.me.focus()
+    clicked (event) {
+      event.preventDefault()
+      this.takeFocus()
+    },
+    takeFocus (fromBelow = false) {
+      if (fromBelow && this.isCollection && this.item.is_open) {
+        this.$refs.childRefs[this.$refs.childRefs.length - 1].takeFocus(fromBelow)
+      }
+      else {
+        this.$refs.me.focus()
+        // this.$store.commit('focus', {
+        //   id: this.item.id
+        // })
+      }
+    },
+    focusChange (idx, event) {
+      switch (event) {
+      case 'up':
+        if (idx === 0) {
+          this.takeFocus()
+        }
+        else {
+          this.$refs.childRefs[idx - 1].takeFocus(true)
+        }
+        break
+      case 'down':
+        if (idx === this.$refs.childRefs.length - 1) {
+          this.$emit('focus-change', 'down')
+        }
+        else {
+          this.$refs.childRefs[idx + 1].takeFocus()
+        }
+        break
+      }
     },
     harakiri () {
       this.$store.dispatch('deleteItem', {
@@ -242,7 +307,6 @@ export default {
         idx: this.item.idx
       })
     },
-
     keyCheck (event) {
       const shift = event.getModifierState('Shift')
       const ctrl = event.getModifierState('Control')
@@ -259,13 +323,11 @@ export default {
           break
         case 'ArrowUp':
           this.saveEdit(true)
-          this.$store.commit('focus', { id: this.item.id, how: 'up' })
-          // this.$emit('focus-change', 'up')
+          this.$emit('focus-change', 'up')
           break
         case 'ArrowDown':
           this.saveEdit(true)
-          this.$store.commit('focus', 'down')
-          // this.$emit('focus-change', 'down')
+          this.$emit('focus-change', 'down')
           break
         }
       }
@@ -273,31 +335,31 @@ export default {
         switch (event.key) {
         case 'ArrowUp':
           if (!ctrl) {
-            this.$store.commit('focus', { id: this.item.id, how: 'up' })
-            // this.$emit('focus-change', 'up')
+            this.$emit('focus-change', 'up')
           }
           else {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'up'
             })
           }
           break
         case 'ArrowDown':
           if (!ctrl) {
-            this.$store.commit('focus', { id: this.item.id, how: 'down' })
-            // if (this.isCollection && this.item.is_open) {
-            //   this.$refs.childRefs[0].takeFocus()
-            // }
-            // else {
-            //   this.$emit('focus-change', 'down')
-            // }
+            if (this.isCollection && this.item.is_open) {
+              this.$refs.childRefs[0].takeFocus()
+            }
+            else {
+              this.$emit('focus-change', 'down')
+            }
           }
           else {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'down'
             })
           }
@@ -315,16 +377,18 @@ export default {
           break
         case 'Tab':
           if (shift) {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'out'
             })
           }
           else {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'in'
             })
           }
