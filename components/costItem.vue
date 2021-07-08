@@ -1,12 +1,12 @@
 <template>
   <div>
     <b-row
-      v-if="!root"
       ref="me"
       class="cost-item-row"
-      :class="{ checked: isChecked}"
+      :class="{ checked: isChecked }"
       tabindex="0"
       @keydown="keyCheck"
+      @click="clicked"
     >
       <span class="collapse-icons-spacer">
         <span v-if="isCollection">
@@ -18,9 +18,11 @@
         </span>
       </span>
 
-      <div style="display: inline-block" class="name-section">
+      <div style="display: inline-block" class="name-section" @dblclick="enableEditing('text')">
         <div v-show="editing !== 'text'">
-          <span class="text" @click="enableEditing('text')">{{ item.name }}</span>
+          <p class="text">
+            {{ item.name }}
+          </p>
         </div>
         <div v-show="editing === 'text'">
           <b-form-input
@@ -36,7 +38,7 @@
         <span v-else>
           <div style="display: inline-block">
             <div v-show="editing !== 'costs'">
-              <span class="text" @click="enableEditing('costs')">${{ costString }}</span>
+              <span class="text" @dblclick="enableEditing('costs')">${{ costString }}</span>
             </div>
             <div v-show="editing === 'costs'">
               <b-form-input
@@ -50,15 +52,13 @@
       </span>
     </b-row>
 
-    <b-collapse id="collapse-1" v-model="isOpen" class="cost-item-full">
+    <b-collapse id="collapse-1" v-model="item.is_open" class="cost-item-full">
       <cost-item
-        v-for="(child, index) in item.children"
+        v-for="(child, index) in children"
         ref="childRefs"
         :key="index"
         :item="child"
-        :focus-change="focusChange(index)"
         :inheritchecked="isChecked"
-        :focused="focused"
         @focus-change="focusChange(index, $event)"
       />
     </b-collapse>
@@ -78,17 +78,12 @@ export default {
           min_cost: 0,
           max_cost: 0,
           checked: false,
-          is_open: true
+          is_open: true,
+          children: []
         }
       }
     },
     inheritchecked: {
-      type: Boolean,
-      default () {
-        return false
-      }
-    },
-    root: {
       type: Boolean,
       default () {
         return false
@@ -103,31 +98,61 @@ export default {
     }
   },
   computed: {
-    isOpen: {
-      get () {
-        return this.item.is_open || this.root
-      },
-      set () { }
-    },
     isChecked () {
       return this.inheritchecked || this.item.checked
     },
     isCollection () {
-      return this.item.children && this.item.children.length
+      return this.item.children.length > 0
     },
     noCost () {
-      return this.item.max_cost === 0 || (this.item.min_cost == null && this.item.max_cost == null)
+      return this.costs[0] === 0 || (this.costs[0] == null && this.costs[1] == null)
     },
     costString () {
-      return '' + this.item.min_cost +
-      ((this.item.max_cost === this.item.min_cost || this.item.max_cost === null) ? '' : (' - ' + this.item.max_cost))
+      return '' + this.costs[0] +
+      ((this.costs[1] === this.costs[0] || this.costs[1] === null) ? '' : (' - ' + this.costs[1]))
+    },
+    costs () {
+      if (this.isChecked) {
+        return [0, 0]
+      }
+      if (this.isCollection) {
+        const sum = this.children.reduce((s, c) => {
+          if (c.checked) {
+            return s
+          }
+          return [s[0] + c.min_cost, s[1] + c.max_cost]
+        }, [0, 0])
+        if (this.item.min_cost !== sum[0] || this.item.max_cost !== sum[1]) {
+          this.$store.commit('updateItem', { id: this.item.id, updates: { min_cost: sum[0], max_cost: sum[1] } })
+        }
+        return sum
+      }
+      return [this.item.min_cost, this.item.max_cost]
     },
     focused () {
-      if (this.$store.state.focused === this.item.id) {
-        // this.takeFocus(false)
-        return true
+      return this.$store.state.focused
+    },
+    children () {
+      const inflatedChildren = this.item.children.map((childid, idx) => {
+        const child = this.$store.state.items[childid]
+        if (child.idx !== idx) {
+          this.$store.dispatch('updateItem', { id: child.id, updates: { idx } })
+        }
+        return child
+      })
+      return inflatedChildren
+    }
+  },
+  watch: {
+    focused (n, old) {
+      if (n.id === this.item.id) {
+        this.takeFocus(false)
       }
-      return false
+    }
+  },
+  mounted () {
+    if (this.focused.id === this.item.id) {
+      this.takeFocus(false)
     }
   },
   methods: {
@@ -194,7 +219,9 @@ export default {
           }
         }
       }
-      this.updateItem({ min_cost: min, max_cost: max })
+      if (min !== this.item.min_cost || max !== this.item.max_cost) {
+        this.updateItem({ min_cost: min, max_cost: max })
+      }
     },
     saveEdit (andClose) {
       switch (this.editing) {
@@ -202,7 +229,9 @@ export default {
         this.saveCosts()
         break
       case 'text':
-        this.updateItem({ name: this.tempValue })
+        if (this.tempValue !== this.item.name) {
+          this.updateItem({ name: this.tempValue })
+        }
         break
       default:
         break
@@ -221,7 +250,6 @@ export default {
         this.$store.dispatch('makeCollection', {
           id: this.item.id
         })
-        this.item.is_open = true
       }
     },
     updateItem (updates) {
@@ -236,17 +264,22 @@ export default {
         id: this.item.id
       })
     },
+    dblclicked (event) {
+      this.enableEditing('text')
+    },
+    clicked (event) {
+      event.preventDefault()
+      this.takeFocus()
+    },
     takeFocus (fromBelow = false) {
-      if (!this.root) {
-        if (fromBelow && this.isCollection && this.item.is_open) {
-          this.$refs.childRefs[this.$refs.childRefs.length - 1].takeFocus(fromBelow)
-        }
-        else {
-          this.$refs.me.focus()
-        // this.$store.commit('setFocus', {
+      if (fromBelow && this.isCollection && this.item.is_open) {
+        this.$refs.childRefs[this.$refs.childRefs.length - 1].takeFocus(fromBelow)
+      }
+      else {
+        this.$refs.me.focus()
+        // this.$store.commit('focus', {
         //   id: this.item.id
         // })
-        }
       }
     },
     focusChange (idx, event) {
@@ -307,9 +340,10 @@ export default {
             this.$emit('focus-change', 'up')
           }
           else {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'up'
             })
           }
@@ -324,9 +358,10 @@ export default {
             }
           }
           else {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'down'
             })
           }
@@ -344,16 +379,18 @@ export default {
           break
         case 'Tab':
           if (shift) {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'out'
             })
           }
           else {
-            this.$store.commit('relocateItem', {
-              parent: this.item.parent,
+            this.$store.dispatch('relocateItem', {
               id: this.item.id,
+              parent: this.item.parent,
+              idx: this.item.idx,
               action: 'in'
             })
           }
@@ -377,7 +414,7 @@ export default {
           this.updateItem({ checked: !this.item.checked })
           break
         case 'Enter':
-          this.$store.dispatch('newSibling', { id: this.item.id })
+          this.$store.dispatch('newSibling', { parent: this.item.parent, idx: this.item.idx })
           break
         default:
           break
