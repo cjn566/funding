@@ -47,10 +47,12 @@ const store = new Vuex.Store({
       let newItem = {
         name: 'new item',
         parent: parent.id,
-        idx: placement,
-        min_cost: null,
-        max_cost: null
+        idx: placement
+        // min_cost: 1,
+        // max_cost: 2
       }
+      Vue.set(newItem, 'min_cost', 1)
+      Vue.set(newItem, 'max_cost', 2)
       newItem = await context.dispatch('newItem', newItem)
       parent.children.splice(placement, 0, newItem.id)
       context.commit('focus', newItem.id)

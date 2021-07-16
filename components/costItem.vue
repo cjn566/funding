@@ -1,5 +1,6 @@
 <template>
   <div>
+    {{ costs }}
     <b-row
       ref="me"
       class="cost-item-row"
@@ -18,38 +19,41 @@
         </span>
       </span>
 
-      <div style="display: inline-block" class="name-section" @dblclick="enableEditing('text')">
-        <div v-show="editing !== 'text'">
-          <p class="text">
+      <div class="name-and-costs">
+        <div style="display: inline-block" class="name-section" @dblclick="enableEditing('text')">
+          <div v-show="editing !== 'text'" class="text">
             {{ item.name }}
-          </p>
-        </div>
-        <div v-show="editing === 'text'">
-          <b-form-input
-            ref="text"
-            v-model="tempValue"
-            @focus="enableEditing('text')"
-          />
-        </div>
-      </div>
-
-      <span v-show="!noCost || editing === 'costs'" class="cost-range-spacer">
-        <span v-if="isCollection" class="sum-costs">${{ costString }}</span>
-        <span v-else>
-          <div style="display: inline-block">
-            <div v-show="editing !== 'costs'">
-              <span class="text" @dblclick="enableEditing('costs')">${{ costString }}</span>
-            </div>
-            <div v-show="editing === 'costs'">
-              <b-form-input
-                ref="costsText"
-                v-model="tempValue"
-                @focus="enableEditing('costs')"
-              />
-            </div>
           </div>
+          <div v-show="editing === 'text'">
+            <b-form-input
+              ref="text"
+              v-model="tempValue"
+              size="sm"
+              @focus="enableEditing('text')"
+            />
+          </div>
+        </div>
+
+        <span v-show="!noCost || editing === 'costs'" class="cost-range-spacer">
+          <span v-if="isCollection" class="sum-costs">${{ costString }}</span>
+          <span v-else>
+            <div style="display: inline-block">
+              <div v-show="editing !== 'costs'">
+                <span class="editable-costs" @click="enableEditing('costs')">${{ costString }}</span>
+              </div>
+              <div v-show="editing === 'costs'">
+                <b-form-input
+                  ref="costsText"
+                  v-model="tempValue"
+                  size="sm"
+                  class="costs-input"
+                  @focus="enableEditing('costs')"
+                />
+              </div>
+            </div>
+          </span>
         </span>
-      </span>
+      </div>
     </b-row>
 
     <b-collapse id="collapse-1" v-model="item.is_open" class="cost-item-full">

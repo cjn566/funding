@@ -25,6 +25,23 @@
   width: 300px;
 }
 
+.name-and-costs {
+  cursor:pointer;
+  display: inline-flex;
+  padding-left: 5px;
+  border-bottom: 1px solid lightgray;
+  border-left: 1px solid lightgray;
+  border-bottom-left-radius: 4px;
+}
+
+.editable-costs {
+  padding: 5px;
+  border-radius: 2px;
+  width: 100px;
+  border: 1px solid rgb(219, 241, 255);
+  background-color: rgb(244, 255, 244);
+}
+
 .text {
   width: 250px;
   white-space: nowrap;
@@ -37,7 +54,7 @@
 }
 
 .cost-item-row {
-  border-radius: 4px;
+  width: 50%;
 
   &:hover {
     background-color:gainsboro;
@@ -64,9 +81,12 @@
 }
 
 .sum-costs {
-  font-weight: bold;
+  // font-weight: bold;
 }
 
+.costs-input {
+  width: 100px;
+}
 
 
 
