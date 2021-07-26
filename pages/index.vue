@@ -24,7 +24,7 @@ const store = new Vuex.Store({
       state.items = payload.items
     },
     addItem (state, item) {
-      state.items[item.id] = item
+      Vue.set(state.items, item.id, item)
     },
     updateItem (state, payload) {
       const item = state.items[payload.id]
@@ -47,12 +47,10 @@ const store = new Vuex.Store({
       let newItem = {
         name: 'new item',
         parent: parent.id,
-        idx: placement
-        // min_cost: 1,
-        // max_cost: 2
+        idx: placement,
+        min_cost: null,
+        max_cost: null
       }
-      Vue.set(newItem, 'min_cost', 1)
-      Vue.set(newItem, 'max_cost', 2)
       newItem = await context.dispatch('newItem', newItem)
       parent.children.splice(placement, 0, newItem.id)
       context.commit('focus', newItem.id)
@@ -70,7 +68,6 @@ const store = new Vuex.Store({
       newParent.is_open = true
       newParent.children.push(newItem.id)
       context.commit('focus', newItem.id)
-      context.state.editing = 'text'
     },
     async newItem (context, item) {
       const url = '/api/app/newItem'

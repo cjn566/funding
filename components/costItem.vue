@@ -1,6 +1,5 @@
 <template>
   <div>
-    {{ costs }}
     <b-row
       ref="me"
       class="cost-item-row"
@@ -30,6 +29,7 @@
               v-model="tempValue"
               size="sm"
               @focus="enableEditing('text')"
+              @blur="saveEdit(true)"
             />
           </div>
         </div>
@@ -48,6 +48,7 @@
                   size="sm"
                   class="costs-input"
                   @focus="enableEditing('costs')"
+                  @blur="saveEdit(true)"
                 />
               </div>
             </div>
@@ -157,6 +158,7 @@ export default {
   mounted () {
     if (this.focused.id === this.item.id) {
       this.takeFocus(false)
+      this.enableEditing('text')
     }
   },
   methods: {
@@ -281,9 +283,6 @@ export default {
       }
       else {
         this.$refs.me.focus()
-        // this.$store.commit('focus', {
-        //   id: this.item.id
-        // })
       }
     },
     focusChange (idx, event) {
